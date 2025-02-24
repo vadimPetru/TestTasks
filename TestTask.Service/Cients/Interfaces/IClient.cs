@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace TestTask.Service.Cients.Interfaces;
 
-namespace TestTask.Service.Cients.Interfaces
+internal interface IClient
 {
-    internal class IClient
-    {
-    }
+    public Task<IEnumerable<T>> GetTradesAsync<T>(string symbols);
 }
