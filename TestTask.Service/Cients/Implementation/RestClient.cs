@@ -82,6 +82,6 @@ namespace TestTask.Service.Cients.Implementation
             return candles;
         }
 
-      
+        public async Task<List<>>
     }
 }
