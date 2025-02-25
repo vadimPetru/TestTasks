@@ -88,8 +88,20 @@ namespace TestTask.Service.Cients.Implementation
             string url = $"https://api-pub.bitfinex.com/v2/ticker/{symbol}";
             var jsonResponse = await _client.GetAsync(url);
             var content = await jsonResponse.Content.ReadAsStringAsync();
-            var response = JsonConvert.DeserializeObject<Ticker>(content);
-            return response;
+            var response = JsonConvert.DeserializeObject<List<decimal>>(content);
+
+            var tiker = new Ticker(response[0],
+                response[1],
+                response[2],
+                response[3],
+                response[4],
+                response[5],
+                response[6],
+                response[7],
+                response[8],
+                response[9]
+            );
+            return tiker;
         }
     }
 }

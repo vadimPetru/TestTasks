@@ -1,10 +1,11 @@
-﻿using TestHQ;
+﻿using ConnectorTest;
+using TestHQ;
 using TestTask.Models.Models;
 using TestTask.Service.Cients.Interfaces;
 
 namespace TestTask.Service.Connector.Implementation;
 
-public class Connector(IRestClient client)
+public class Connector(IRestClient client) 
 {
     private readonly IRestClient _client = client;
 
@@ -38,6 +39,20 @@ public class Connector(IRestClient client)
             return result;
 
         }catch(Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
+
+    public async Task<Ticker> GetTickerAsycn(string symbol)
+    {
+        try
+        {
+            var result = await _client.GetTickerAsync(symbol);
+            return result;
+        }
+        catch (Exception ex)
         {
             throw new Exception(ex.Message);
         }
