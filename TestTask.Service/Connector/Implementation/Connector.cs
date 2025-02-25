@@ -1,4 +1,5 @@
 ﻿using TestHQ;
+using TestTask.Models.Models;
 using TestTask.Service.Cients.Interfaces;
 
 namespace TestTask.Service.Connector.Implementation;
@@ -24,11 +25,18 @@ public class Connector(IRestClient client)
         int periodInSec,
         DateTimeOffset? from,
         DateTimeOffset? to = null,
-        long? count = 0)
+        long? count = 0
+        )
     {
         try
         {
-            var result = await _client.GetCandleAsync();
+            var period = FrameConvert.ConvertPeriodIntSecToString(periodInSec);
+            string candle = $"trade:{period}:{pair}";
+            long startTime = from?.ToUnixTimeMilliseconds() ?? 0;
+            long endDate = to?.ToUnixTimeMilliseconds() ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var result = await _client.GetCandleAsync(pair, candle, startTime, endDate, count);
+            return result;
+
         }catch(Exception ex)
         {
             throw new Exception(ex.Message);
