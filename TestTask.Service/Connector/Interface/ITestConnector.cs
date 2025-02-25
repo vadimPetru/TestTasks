@@ -1,4 +1,5 @@
 ﻿using TestHQ;
+using TestTask.Models.Models;
 
 namespace ConnectorTest;
 
@@ -8,7 +9,7 @@ interface ITestConnector
 
     Task<IEnumerable<Trade>> GetNewTradesAsync(string pair, int maxCount);
     Task<IEnumerable<Candle>> GetCandleSeriesAsync(string pair, int periodInSec, DateTimeOffset? from, DateTimeOffset? to = null, long? count = 0);
-
+    Task<Ticker> GetTicker(string symbol);
     #endregion
 
     #region Socket

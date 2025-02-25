@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using TestHQ;
+using TestTask.Models.Models;
 using TestTask.Service.Cients.Interfaces;
 namespace TestTask.Service.Cients.Implementation
 {
@@ -82,6 +83,13 @@ namespace TestTask.Service.Cients.Implementation
             return candles;
         }
 
-        public async Task<List<>>
+        public async Task<Ticker> GetTickerAsync(string symbol)
+        {
+            string url = $"https://api-pub.bitfinex.com/v2/ticker/{symbol}";
+            var jsonResponse = await _client.GetAsync(url);
+            var content = await jsonResponse.Content.ReadAsStringAsync();
+            var response = JsonConvert.DeserializeObject<Ticker>(content);
+            return response;
+        }
     }
 }

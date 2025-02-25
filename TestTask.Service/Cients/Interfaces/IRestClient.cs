@@ -1,4 +1,5 @@
 ﻿using TestHQ;
+using TestTask.Models.Models;
 
 namespace TestTask.Service.Cients.Interfaces;
 
@@ -10,4 +11,5 @@ public interface IRestClient
             long startTime,
             long endTime,
             long? count = 0);
+    public Task<Ticker> GetTickerAsync(string symbol); 
 }
