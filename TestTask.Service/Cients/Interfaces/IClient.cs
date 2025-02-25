@@ -1,6 +1,8 @@
-﻿namespace TestTask.Service.Cients.Interfaces;
+﻿using TestHQ;
 
-internal interface IClient
+namespace TestTask.Service.Cients.Interfaces;
+
+public interface IClient
 {
-    public Task<IEnumerable<T>> GetTradesAsync<T>(string symbols);
+    public Task<List<Trade>> GetTradesAsync(string symbols);
 }
