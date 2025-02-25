@@ -8,7 +8,7 @@ var services = new ServiceCollection();
 
 services.AddHttpClient();
 
-services.AddSingleton<IClient>(provider =>
+services.AddSingleton<IRestClient>(provider =>
 {
     var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
     return new RestClient(httpClientFactory);
@@ -22,8 +22,9 @@ var connector = serviceProvider.GetRequiredService<Connector>();
 
 try
 {
-    var orderBook = await connector.GetNewTradesAsync("tBTCUSD");
-    Console.WriteLine(orderBook.First().Id + orderBook.Last().Id);
+    var trades = await connector.GetNewTradesAsync("tBTCUSD");
+    var candels = await connector.GetCandleSeriesAsync("tBTCUSD", 60, DateTimeOffset.UtcNow.AddDays(-1), count: 30);
+    Console.WriteLine(trades.First().Id + trades.Last().Id); 
 }catch(Exception ex)
 {
     throw new Exception(ex.Message);
