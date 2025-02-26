@@ -28,9 +28,22 @@ try
         count: 30
         );
 
-    var ticker = await connector.GetTickerAsycn("tBTCUSD");
     Console.WriteLine(trades.First().Id + trades.Last().Id); 
 }catch(Exception ex)
 {
     throw new Exception(ex.Message);
 }
+
+
+await connector.ConnectAsync();
+connector.NewBuyTrade += trade => Console.WriteLine($"New buy trade: {trade}");
+connector.NewSellTrade += trade => Console.WriteLine($"New sell trade: {trade}");
+await connector.SubscribeTrades("tBTCUSD");
+await connector.SubscribeCandles("tBTCUSD", 60, DateTimeOffset.UtcNow.AddDays(-1),
+        count: 30);
+connector.Processing();
+await Task.Delay(25000); // Ждем 25 секунд
+await connector.UnsubscribeTrades("tBTCUSD");
+Console.ReadKey();
+
+
