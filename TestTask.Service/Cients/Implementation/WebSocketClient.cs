@@ -1,57 +1,110 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Net.WebSockets;
 using System.Text;
+using TestHQ;
 using TestTask.Service.Cients.Interfaces;
 
 namespace TestTask.Service.Cients.Implementation
 {
     public class WebSocketClient : IWebSocketClient
+    {
+        private readonly ClientWebSocket _webSocket;
+        private readonly Uri _serverUri;
+        private readonly CancellationTokenSource _ctx;
+
+        public event EventHandler<string> OnMessageReceived;
+        public event EventHandler<string> OnError;
+
+        public WebSocketClient(string serverUrl)
         {
-            private readonly ClientWebSocket _webSocket;
-            private readonly Uri _serverUri;
-            private readonly CancellationTokenSource _ctx;
+            _webSocket = new ClientWebSocket();
+            _serverUri = new Uri(serverUrl);
+            _ctx = new CancellationTokenSource();
+        }
 
-            public event EventHandler<string> OnMessageReceived;
-            public event EventHandler<string> OnError;
-
-            public WebSocketClient(string serverUrl)
+        public async Task ConnectAsync()
+        {
+            try
             {
-                _webSocket = new ClientWebSocket();
-                _serverUri = new Uri(serverUrl);
-                _ctx = new CancellationTokenSource();
+                await _webSocket.ConnectAsync(_serverUri, _ctx.Token);
+            }
+            catch (WebSocketException ex)
+            {
+                OnError?.Invoke(this, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke(this, ex.Message);
+            }
+        }
+        public async Task SendEventAsync(object message)
+        {
+            if (_webSocket.State != WebSocketState.Open)
+            {
+                OnError?.Invoke(this, "WebSocket is not open");
             }
 
-            public async Task ConnectAsync()
+            try
+            {
+
+                string jsonMessage = JsonConvert.SerializeObject(message);
+                byte[] buffer = Encoding.UTF8.GetBytes(jsonMessage);
+                await _webSocket.SendAsync(new ArraySegment<byte>(buffer),
+                    WebSocketMessageType.Text, true, _ctx.Token
+                 );
+            }
+            catch (WebSocketException ex)
+            {
+                OnError?.Invoke(this, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                OnError?.Invoke(this, ex.Message);
+            }
+        }
+        public async Task ListenForMessageAsync()
+        {
+            while (_webSocket.State == WebSocketState.Open)
             {
                 try
                 {
-                    await _webSocket.ConnectAsync(_serverUri, _ctx.Token);
+                    byte[] buffer = new byte[1024 * 100];
+                    var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer),
+                        _ctx.Token);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,
+                            "Соединение закрыто",
+                            _ctx.Token
+                            );
+                    }
+                    var receiveMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
+
+                    OnMessageReceived?.Invoke(this, receiveMessage);
+
                 }
-                catch(WebSocketException ex)
+                catch (WebSocketException ex)
                 {
                     OnError?.Invoke(this, ex.Message);
-                }catch(Exception ex)
-                {
-                    OnError?.Invoke(this, ex.Message);
+                    break;
                 }
+
             }
-            public async Task SendEventAsync(object message)
+        }
+        public bool IsHeartbeat(JToken message)
+        {
+            return (message is JArray array && array.Count == 0) ||
+            (message is JArray hbArray
+            && hbArray.Count == 2 && hbArray[1].ToString() == "hb");
+        }
+        public async Task CloseAsync()
+        {
+            if (_webSocket.State == WebSocketState.Open || _webSocket.State == WebSocketState.CloseReceived)
             {
-                if(_webSocket.State != WebSocketState.Open)
-                {
-                    OnError?.Invoke(this, "WebSocket is not open");
-                }
-               
                 try
                 {
-                  
-                    string jsonMessage = JsonConvert.SerializeObject(message);
-
-                    byte[] buffer = Encoding.UTF8.GetBytes(jsonMessage);
-
-                    await _webSocket.SendAsync(new ArraySegment<byte>(buffer),
-                        WebSocketMessageType.Text, true, _ctx.Token
-                     );
+                    await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", _ctx.Token);
                 }
                 catch (WebSocketException ex)
                 {
@@ -62,55 +115,60 @@ namespace TestTask.Service.Cients.Implementation
                     OnError?.Invoke(this, ex.Message);
                 }
             }
-            public async Task ListenForMessageAsync()
-            {
-                while(_webSocket.State == WebSocketState.Open)
-                {
-                    try
-                    {
-                        byte[] buffer = new byte[1024 * 100];
-                        var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer),
-                            _ctx.Token);
-                        if(result.MessageType == WebSocketMessageType.Close)
-                    {
-                        await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,
-                            "Соединение закрыто",
-                            _ctx.Token
-                            );
-                    }
-                        var receiveMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                        OnMessageReceived?.Invoke(this, receiveMessage);
+        }
+        public void HandleEvent(JToken eventMessage)
+        {
+            string eventType = eventMessage["event"]?.ToString()!;
+            string chanId = eventMessage["chanId"]?.ToString()!;
 
-                    }catch(WebSocketException ex)
-                    {
-                        OnError?.Invoke(this, ex.Message);
-                        break;
-                    }
-               
-                }
-            }
-
-            public async Task CloseAsync()
+            switch (eventType)
             {
-                if(_webSocket.State == WebSocketState.Open || _webSocket.State == WebSocketState.CloseReceived)
-                {
-                    try
-                    {
-                        await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", _ctx.Token);
-                    }
-                    catch(WebSocketException ex)
-                    {
-                        OnError?.Invoke(this, ex.Message);
-                    }catch(Exception ex)
-                    {
-                        OnError?.Invoke(this, ex.Message);
-                    }
-                }
-            }
-            public void Dispose()
-            {
-                _webSocket?.Dispose();
-                _ctx?.Dispose();
+                case "info":
+                    Console.WriteLine("Подключение Успешно");
+                    break;
+                case "subscribed":
+                    Console.WriteLine("Подписка на канал");
+                    break;
+                case "unsubscribed":
+                    Console.WriteLine($"Отписка от канала: {chanId}");
+                    break;
+                default:
+                    Console.WriteLine("Неизвестное событие");
+                    break;
             }
         }
+        public void HandleData(JToken messageData)
+        {
+            var channelId = messageData[0].ToObject<int>();
+            var array = messageData[1] as JArray;
+
+            if (array is null || array.Count == 0)
+            {
+                Console.WriteLine("Массив пустой");
+            }
+
+            if (array.Count == 6)
+            {
+                Candle.HandleCandle(array);
+                return;
+            }
+            var firstItem = array[0] as JArray;
+
+            if (firstItem.Count == 4)
+            {
+                Trade.HandleTrades(array);
+            }
+            else
+            {
+                Candle.HandleCandle(array);
+            }
+
+
+        }
+        public void Dispose()
+        {
+            _webSocket?.Dispose();
+            _ctx?.Dispose();
+        }
     }
+}

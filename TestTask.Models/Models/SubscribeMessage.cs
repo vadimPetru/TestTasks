@@ -1,7 +1,7 @@
 ﻿namespace TestTask.Models.Models
 {
     /// <summary>
-    /// Сообщение для подписки на торги
+    /// Сообщение для подписки на Trade
     /// </summary>
     /// <param name="event">Название события</param>
     /// <param name="channel">Название канала</param>
@@ -12,7 +12,7 @@
     );
 
     /// <summary>
-    /// Сообщение для подписки Свечи
+    /// Сообщение для подписки на Candle
     /// </summary>
     /// <param name="event">Название события</param>
     /// <param name="channel">Название канала</param>
@@ -23,10 +23,20 @@
     );
 
     /// <summary>
-    /// Сообщение отписки
+    /// Сообщение для отписки на Trade
     /// </summary>
     /// <param name="event">Название события</param>
-    public record UnSubscribeTradeMessage(string @event
+    /// <param name="chatId">Индификатор чата для отписки</param>
+    public record UnSubscribeTradeMessage(string @event,
+        int chanId
     );
 
+    /// <summary>
+    /// Сообщение для отписки на Candle
+    /// </summary>
+    /// <param name="event">Название события</param>
+    /// <param name="chatId">Индификатор чата для отписки</param>
+    public record UnSubscribeCandleMessage(string @event,
+        int chatId
+    );
 }
