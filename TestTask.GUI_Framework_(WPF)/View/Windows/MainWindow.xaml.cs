@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using ConnectorTest;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -8,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TestTask.GUI_Framework__WPF_.ViewModel;
 
 namespace TestTask.GUI_Framework__WPF_
 {
@@ -16,11 +18,10 @@ namespace TestTask.GUI_Framework__WPF_
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        public MainWindow(ITestConnector connector)
         {
             InitializeComponent();
+            DataContext = new MainWindowViewModel(connector);
         }
-
-        
     }
 }

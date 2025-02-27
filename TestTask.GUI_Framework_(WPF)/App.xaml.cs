@@ -6,6 +6,7 @@ using TestTask.Service.Cients.Implementation;
 using TestTask.Service.Cients.Interfaces;
 using TestTask.Service.Connector.Implementation;
 using ConnectorTest;
+using TestTask.GUI_Framework__WPF_.ViewModel;
 namespace TestTask.GUI_Framework__WPF_
 {
 
@@ -25,6 +26,7 @@ namespace TestTask.GUI_Framework__WPF_
                         var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
                         return new RestClient(httpClientFactory);
                     });
+                    services.AddSingleton<MainWindowViewModel>();
                     services.AddSingleton<ITestConnector,Connector>();
                 })
                 .Build();

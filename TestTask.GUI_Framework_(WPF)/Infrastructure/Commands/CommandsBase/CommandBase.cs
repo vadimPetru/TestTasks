@@ -1,6 +1,6 @@
 ﻿using System.Windows.Input;
 
-namespace TestTask.GUI_Framework__WPF_.Infrastructure.Commands.CommandBase
+namespace TestTask.GUI_Framework__WPF_.Infrastructure.Commands.CommandsBase
 {
     internal abstract class CommandBase : ICommand
     {

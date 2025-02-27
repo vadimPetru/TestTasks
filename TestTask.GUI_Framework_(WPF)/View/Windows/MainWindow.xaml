@@ -7,9 +7,7 @@
         xmlns:local="clr-namespace:TestTask.GUI_Framework__WPF_"
         mc:Ignorable="d"
         Title="{Binding Title}" Height="500" Width="800">
-    <Window.DataContext>
-        <vm:MainWindowViewModel/>
-    </Window.DataContext>
+   
     <Grid>
 
         <TabControl>
@@ -23,13 +21,15 @@
                          VerticalAlignment="Bottom"
                          Margin="15"
                          Width="110"
+                        Command="{Binding FetchTradeDataCommand}"
                      />
 
                     <Button Content="{Binding CandleButton}" 
                       HorizontalAlignment="Left"
                       VerticalAlignment="Bottom"
                       Margin="15"
-                      Width="110"    
+                      Width="110"   
+                      Command="{Binding FetchCandleDataCommand}"
                     />
                     <Button Content="{Binding TickerButton}" 
                       HorizontalAlignment="Center"

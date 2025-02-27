@@ -1,10 +1,13 @@
-﻿using TestTask.GUI_Framework__WPF_.ViewModel.Base;
+﻿using ConnectorTest;
+using System.Windows.Input;
+using TestTask.GUI_Framework__WPF_.Infrastructure.Commands;
+using TestTask.GUI_Framework__WPF_.ViewModel.Base;
 
 namespace TestTask.GUI_Framework__WPF_.ViewModel;
 
 internal class MainWindowViewModel : ViewModelBase
 {
-
+    #region Название окна
     private string _title = "Тестовое задание";
     /// <summary>
     /// Заголовок окна
@@ -13,6 +16,8 @@ internal class MainWindowViewModel : ViewModelBase
         get => _title;
         set => Set(ref _title, value);
     }
+    #endregion
+
     #region Модели для Окна Rest
     private string _tradeButton = "Торги";
     /// <summary>
@@ -44,4 +49,61 @@ internal class MainWindowViewModel : ViewModelBase
         set => Set(ref _tickerButton, value);
     }
     #endregion
+
+    #region Команды Rest
+
+    #region Команда для Торгов
+    public ICommand FetchTradeDataCommand { get; }
+
+    private bool CanFetchDataCommandExecute(object p) => true;
+
+    private async void OnFetchDataCommandExecuted(object p)
+    {
+        
+        try
+        {
+          
+            var result = await _connector.GetNewTradesAsync("tBTCUSD", 100);
+        }catch(Exception ex)
+        {
+
+        }
+       
+    }
+    #endregion
+
+    #region Команда для Свечей
+    public  ICommand FetchCandleDataCommand { get; }
+
+    private bool CanFetchCandleDataCommandExecute(object p) => true;
+
+    private async void OnFetchCandleDataCommandExecuted(object p)
+    {
+        try
+        {
+            var result = await _connector.GetCandleSeriesAsync("tBTCUSD",
+                60,
+                DateTimeOffset.UtcNow.AddDays(-1),
+                count: 30);
+        }catch(Exception ex)
+        {
+
+        }
+    }
+    #endregion
+
+    #endregion
+
+    private readonly ITestConnector _connector;
+    public MainWindowViewModel(ITestConnector connector)
+    {
+        #region Инициализация комманды
+
+        FetchTradeDataCommand = new TradeRestCommand(OnFetchDataCommandExecuted, CanFetchDataCommandExecute);
+        FetchCandleDataCommand = new CandleRestCommand(OnFetchCandleDataCommandExecuted, CanFetchCandleDataCommandExecute);
+
+        #endregion
+        _connector = connector;
+
+    }
 }
