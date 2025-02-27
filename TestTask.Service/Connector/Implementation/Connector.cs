@@ -12,7 +12,7 @@ public class Connector : ITestConnector
     private readonly IRestClient _client;
     private readonly IWebSocketClient _webSocketClient;
     private readonly Dictionary<SubscriptionKey, Subscription>? _tradeSubscriptions;
-    private readonly Dictionary<string, int>? _candleSubscriptions;
+    private readonly Dictionary<SubscriptionKey, Subscription>? _candleSubscriptions;
 
     public event Action<Trade>? NewBuyTrade;
     public event Action<Trade>? NewSellTrade;
@@ -134,8 +134,11 @@ public class Connector : ITestConnector
             else if (messageJToken["event"].ToObject<string>() == "subscribed"
                 && messageJToken["channel"].ToObject<string>() == "candles")
             {
-
-                var key = new SubscriptionKey(messageJToken["symbol"]!.ToObject<string>()!,
+               
+                                                                  
+                var key = new SubscriptionKey(messageJToken["key"]!.ToObject<string>()
+                                                                    .Split(':')
+                                                                    .Last(),
                     messageJToken["channel"]!.ToObject<string>()!
                     );
 
@@ -192,15 +195,15 @@ public class Connector : ITestConnector
         long? count = 0
         )
     {
-        string key = $"{pair}_{periodInSec}";
+       
+        var key = new SubscriptionKey(pair, "candles");
         if (!_candleSubscriptions.ContainsKey(key))
         {
-            _candleSubscriptions[key] = 0;
-          
-
+            _candleSubscriptions[key] = Subscription.CreateInstance(0,"candles",100);
             var period = FrameConvert.ConvertPeriodIntSecToString(periodInSec);
-            string candle = $"trade:{period}:{pair}";
 
+            string candle = $"trade:{period}:{pair}";
+           
 
             var message = new SubscribeCandleMessage("subscribe",
                 "candles", candle);
@@ -210,17 +213,19 @@ public class Connector : ITestConnector
     }
 
 
-    public Task UnsubscribeCandles(string pair)
+    public async Task UnsubscribeCandles(string pair)
     {
         var keys = _candleSubscriptions.Keys
-            .Where(candle => candle.StartsWith(pair))
+            .Where(candle => candle.symbol.StartsWith(pair))
             .ToList();
-
+      
         foreach (var keyRemove in keys)
         {
-            
+            var chanId = _candleSubscriptions[keyRemove].ChanId;
+            var message = new UnSubscribeCandleMessage("unsubscribe", chanId);
 
-            await _webSocketClient.SendEventAsync("unsubscribeCandles", new { pair });
+
+            await _webSocketClient.SendEventAsync(message);
             _candleSubscriptions.Remove(keyRemove);
         }
     }

@@ -37,6 +37,6 @@
     /// <param name="event">Название события</param>
     /// <param name="chatId">Индификатор чата для отписки</param>
     public record UnSubscribeCandleMessage(string @event,
-        int chatId
+        int chanId
     );
 }
