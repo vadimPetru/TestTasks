@@ -9,7 +9,6 @@ namespace TestTask.GUI_Framework__WPF_.ViewModel.Base;
 /// </summary>
 internal abstract class ViewModelBase : INotifyPropertyChanged
 {
-    private bool _Disposed;
     public event PropertyChangedEventHandler? PropertyChanged;
 
 

@@ -2,7 +2,7 @@
 
 namespace ConnectorTest;
 
-interface ITestConnector
+public interface ITestConnector
 {
     #region Rest
 

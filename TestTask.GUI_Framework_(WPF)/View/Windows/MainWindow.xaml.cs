@@ -20,5 +20,7 @@ namespace TestTask.GUI_Framework__WPF_
         {
             InitializeComponent();
         }
+
+        
     }
 }
