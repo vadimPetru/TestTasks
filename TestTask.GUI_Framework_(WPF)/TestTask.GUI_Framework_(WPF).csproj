@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TestTask.Models\TestTask.Models.csproj" />
     <ProjectReference Include="..\TestTask.Service\TestTask.Service.csproj" />
   </ItemGroup>
 

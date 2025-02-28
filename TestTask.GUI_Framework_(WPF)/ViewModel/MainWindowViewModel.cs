@@ -1,5 +1,8 @@
 ﻿using ConnectorTest;
+using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
+using TestHQ;
 using TestTask.GUI_Framework__WPF_.Infrastructure.Commands;
 using TestTask.GUI_Framework__WPF_.ViewModel.Base;
 
@@ -50,6 +53,17 @@ internal class MainWindowViewModel : ViewModelBase
     }
     #endregion
 
+    #region Коллекции Trade
+
+    private ObservableCollection<Trade> _trades;
+    public ObservableCollection<Trade> Trades
+    {
+        get => _trades;
+        set => Set(ref _trades, value);
+    }
+    
+    #endregion
+
     #region Команды Rest
 
     #region Команда для Торгов
@@ -62,11 +76,19 @@ internal class MainWindowViewModel : ViewModelBase
         
         try
         {
-          
+            
             var result = await _connector.GetNewTradesAsync("tBTCUSD", 100);
-        }catch(Exception ex)
-        {
 
+            Trades.Clear();
+            foreach(var trade in result)
+            {
+                Trades.Add(trade);
+            }
+            
+
+            }catch(Exception ex)
+        {
+            MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
        
     }
@@ -95,6 +117,10 @@ internal class MainWindowViewModel : ViewModelBase
     #endregion
 
     private readonly ITestConnector _connector;
+    public MainWindowViewModel()
+    {
+        
+    }
     public MainWindowViewModel(ITestConnector connector)
     {
         #region Инициализация комманды
@@ -103,7 +129,9 @@ internal class MainWindowViewModel : ViewModelBase
         FetchCandleDataCommand = new CandleRestCommand(OnFetchCandleDataCommandExecuted, CanFetchCandleDataCommandExecute);
 
         #endregion
+
         _connector = connector;
 
+        Trades = new();
     }
 }

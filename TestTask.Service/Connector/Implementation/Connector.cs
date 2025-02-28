@@ -304,7 +304,7 @@ public class Connector : ITestConnector
         if (!_candleSubscriptions.ContainsKey(key))
         {
             _candleSubscriptions[key] = periodInSec;
-            //TODO: Повторяеться код
+          
 
             var period = FrameConvert.ConvertPeriodIntSecToString(periodInSec);
             string candle = $"trade:{period}:{pair}";
