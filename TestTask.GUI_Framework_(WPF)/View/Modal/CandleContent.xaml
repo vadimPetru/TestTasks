@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="TestTask.GUI_Framework__WPF_.View.Modal.CandleContent"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:TestTask.GUI_Framework__WPF_.ViewModel.Modal"
+             xmlns:local="clr-namespace:TestTask.GUI_Framework__WPF_.View.Modal"
+             mc:Ignorable="d" 
+             d:DesignHeight="200" d:DesignWidth="300">
+
+    <UserControl.DataContext>
+        <vm:CandleContentViewModel/>
+    </UserControl.DataContext>
+    
+    <Border Background="White" Padding="10" BorderBrush="Gray" BorderThickness="1">
+        <StackPanel>
+            <Label Grid.Row="0" Grid.Column="0" Content="Введи пару:"  Margin="0 0 0 10"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Pair , UpdateSourceTrigger=PropertyChanged}"  Margin="0 0 0 10"/>
+            <Label Grid.Row="1" Grid.Column="0" Content="Выберите дату"  Margin="0 0 0 10"/>
+            <DatePicker Grid.Row="1" Grid.Column="1" SelectedDate="{Binding Date ,UpdateSourceTrigger=PropertyChanged}"  Margin="0 0 0 10"/>
+            <Label Grid.Row="2" Grid.Column="0" Content="Выьерите Временной промежуток" Margin="0 0 10 0"/>
+            <ComboBox Grid.Row="2" Grid.Column="1" SelectedItem="{Binding Item , UpdateSourceTrigger=PropertyChanged}"  Margin="0 0 0 10">
+                <ComboBoxItem Content="60"/>
+                <ComboBoxItem Content="300"/>
+                <ComboBoxItem Content="900"/>
+                <ComboBoxItem Content="1800"/>
+                <ComboBoxItem Content="3600"/>
+                <ComboBoxItem Content="10800"/>
+                <ComboBoxItem Content="21600"/>
+                <ComboBoxItem Content="43200"/>
+                <ComboBoxItem Content="86400"/>
+                <ComboBoxItem Content="604800"/>
+                <ComboBoxItem Content="1209600"/>
+                <ComboBoxItem Content="2592000"/>
+            </ComboBox>
+        </StackPanel>
+    </Border>
+</UserControl>

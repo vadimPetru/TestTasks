@@ -3,7 +3,7 @@ using TestTask.Models.Models;
 
 namespace ConnectorTest;
 
-interface ITestConnector
+public interface ITestConnector
 {
     #region Rest
 
