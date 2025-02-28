@@ -6,10 +6,12 @@
              xmlns:local="clr-namespace:TestTask.GUI_Framework__WPF_.View.Modal"
              mc:Ignorable="d" 
              d:DesignHeight="100" d:DesignWidth="300">
-    <Grid>
-        <StackPanel>
-            <TextBlock Text="Введите пару:" Margin="0 0 0 10"/>
-            <TextBox Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"/>
-        </StackPanel>
-    </Grid>
+    <Border Background="White" Padding="10" BorderBrush="Gray" BorderThickness="1">
+        <Grid>
+            <StackPanel>
+                <TextBlock Text="Введите пару:" Margin="0 0 0 10"/>
+                <TextBox Text="{Binding Pair, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
 </UserControl>

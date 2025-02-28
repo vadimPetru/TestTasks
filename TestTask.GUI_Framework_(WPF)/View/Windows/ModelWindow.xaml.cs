@@ -1,4 +1,5 @@
 ﻿using System.Windows.Controls;
+using TestTask.GUI_Framework__WPF_.ViewModel;
 
 namespace TestTask.GUI_Framework__WPF_.View.Windows
 {
@@ -8,6 +9,7 @@ namespace TestTask.GUI_Framework__WPF_.View.Windows
         public ModelWindow()
         {
             InitializeComponent();
+            DataContext = new ModelWindowViewModel();
         }
     }
 }

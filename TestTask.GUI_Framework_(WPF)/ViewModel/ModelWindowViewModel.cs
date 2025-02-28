@@ -1,5 +1,6 @@
 ﻿using System.Windows.Input;
 using TestTask.GUI_Framework__WPF_.Infrastructure.Commands;
+using TestTask.GUI_Framework__WPF_.View.Modal;
 using TestTask.GUI_Framework__WPF_.ViewModel.Base;
 
 namespace TestTask.GUI_Framework__WPF_.ViewModel
@@ -14,22 +15,24 @@ namespace TestTask.GUI_Framework__WPF_.ViewModel
         #endregion
 
         #region Динамический контент
-        private object _dialogContent;
-        public object DialogContent
+        private IModal _dialogContent;
+        public IModal DialogContent
         {
             get => _dialogContent;
             set => Set(ref _dialogContent, value);
         }
         #endregion
 
-        #region Команды 
+        #region Команды Отправки
         public ICommand OkCommand { get; }
 
         private bool CanOkCommandExecute(object p) => true;
 
         public  void OnOkCommandExecuted(object p) =>  OnDialogClosed?.Invoke(this, true);
-       
 
+        #endregion
+
+        #region Команда Отмены
         public ICommand CancelCommand { get; }
 
         private bool CanCancelCommandExecute(object p) => true;

@@ -15,41 +15,55 @@ internal class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Заголовок окна
     /// </summary>
-    public string Title {
+    public string Title
+    {
         get => _title;
         set => Set(ref _title, value);
     }
     #endregion
 
     #region Модели для Окна Rest
-    private string _tradeButton = "Торги";
+
     /// <summary>
     /// Получение Торгов по Rest
     /// </summary>
+    private string _tradeButton = "Торги";
     public string TradeButton
     {
         get => _tradeButton;
         set => Set(ref _tradeButton, value);
     }
 
-    private string _candleButton = "Свечи";
+
     /// <summary>
     /// Получение Cвечей по Rest
     /// </summary>
+    private string _candleButton = "Свечи";
     public string CandleButton
     {
         get => _candleButton;
         set => Set(ref _candleButton, value);
     }
 
-    private string _tickerButton = "Тикеры";
+
     /// <summary>
     /// Получение Тикеров по Rest
     /// </summary>
+    private string _tickerButton = "Тикеры";
     public string TickerButton
     {
         get => _tickerButton;
         set => Set(ref _tickerButton, value);
+    }
+
+    /// <summary>
+    /// Текущая коллекция
+    /// </summary>
+    public object _currentCollection;
+    public object CurrentCollection
+    {
+        get => _currentCollection;
+        set => Set(ref _currentCollection, value);
     }
     #endregion
 
@@ -61,41 +75,68 @@ internal class MainWindowViewModel : ViewModelBase
         get => _trades;
         set => Set(ref _trades, value);
     }
-    
+
+    #endregion
+
+    #region Коллекция Candle
+    private ObservableCollection<Candle> _candles;
+
+    public ObservableCollection<Candle> Candles
+    {
+        get => _candles;
+        set => Set(ref _candles, value);
+    }
+    #endregion
+
+    #region Видимость окна
+
+    private bool _isModalVisible;
+    public bool IsModalVisible
+    {
+        get => _isModalVisible;
+        set => Set(ref _isModalVisible, value);
+    }
     #endregion
 
     #region Команды Rest
 
     #region Команда для Торгов
+    public ICommand ShowTradesCommand { get;}
     public ICommand FetchTradeDataCommand { get; }
 
     private bool CanFetchDataCommandExecute(object p) => true;
 
     private async void OnFetchDataCommandExecuted(object p)
     {
-        
+
         try
         {
-            
+
+            Trades = new();
             var result = await _connector.GetNewTradesAsync("tBTCUSD", 100);
 
             Trades.Clear();
-            foreach(var trade in result)
+            foreach (var trade in result)
             {
                 Trades.Add(trade);
             }
-            
+            CurrentCollection = Trades;
 
-            }catch(Exception ex)
+            }
+        catch (Exception ex)
         {
             MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
-       
+        finally
+        {
+            IsModalVisible = false;
+        }
+
     }
     #endregion
 
     #region Команда для Свечей
-    public  ICommand FetchCandleDataCommand { get; }
+    public ICommand FetchCandleDataCommand { get; }
 
     private bool CanFetchCandleDataCommandExecute(object p) => true;
 
@@ -103,23 +144,42 @@ internal class MainWindowViewModel : ViewModelBase
     {
         try
         {
+            Candles = new();
             var result = await _connector.GetCandleSeriesAsync("tBTCUSD",
                 60,
                 DateTimeOffset.UtcNow.AddDays(-1),
                 count: 30);
-        }catch(Exception ex)
+            Candles.Clear();
+            foreach(var candle in result)
+            {
+                Candles.Add(candle);
+            }
+            CurrentCollection = null;
+            CurrentCollection = Candles;
+        }
+        catch (Exception ex)
         {
-
+            MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsModalVisible = false;
         }
     }
     #endregion
 
     #endregion
 
+    #region Модельное окно
+
+    #endregion
+
     private readonly ITestConnector _connector;
+    private readonly ModelWindowViewModel _model = new();
+
     public MainWindowViewModel()
     {
-        
+
     }
     public MainWindowViewModel(ITestConnector connector)
     {
@@ -131,7 +191,8 @@ internal class MainWindowViewModel : ViewModelBase
         #endregion
 
         _connector = connector;
-
-        Trades = new();
+       
+      
+       
     }
 }
