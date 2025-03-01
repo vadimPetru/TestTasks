@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using TestHQ;
+using TestTask.Models.Models.Event;
 using TestTask.Service.Cients.Implementation;
 using TestTask.Service.Cients.Interfaces;
 using TestTask.Service.Connector.Implementation;
@@ -28,7 +30,7 @@ try
         count: 30
         );
 
-    Console.WriteLine(trades.First().Id + trades.Last().Id); 
+    Console.WriteLine(trades.Value.First().Id + trades.Value.Last().Id); 
 }catch(Exception ex)
 {
     throw new Exception(ex.Message);
@@ -44,6 +46,8 @@ await connector.SubscribeCandles("tBTCUSD",
     DateTimeOffset.UtcNow.AddDays(-1),
     count: 30
     );
+connector.TradeExecuted += TradeExecuted;
+connector.TradeUpdated += TradeUpdated;
 connector.Processing();
 await Task.Delay(15000); // Ждем 25 секунд
 await connector.UnsubscribeTrades("tBTCUSD");
@@ -51,3 +55,11 @@ await connector.UnsubscribeCandles("tBTCUSD");
 Console.ReadKey();
 
 
+void TradeExecuted(TradeExecutedEventArgs message)
+{
+    Console.WriteLine(message.ChannelId);
+}
+void TradeUpdated(TradeUpdatedEventArgs message)
+{
+    Console.WriteLine(message.ChannelId);
+}

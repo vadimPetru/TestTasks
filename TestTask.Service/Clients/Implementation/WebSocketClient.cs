@@ -15,12 +15,16 @@ namespace TestTask.Service.Cients.Implementation
 
         public event EventHandler<string> OnMessageReceived;
         public event EventHandler<string> OnError;
+        public event EventHandler<object> OnInfoMessage;
+        public event EventHandler<object> OnSubscribeMessage;
+        public event EventHandler<object> OnUnSubscribeMessage;
 
         public WebSocketClient(string serverUrl)
         {
             _webSocket = new ClientWebSocket();
             _serverUri = new Uri(serverUrl);
             _ctx = new CancellationTokenSource();
+            
         }
 
         public async Task ConnectAsync()
@@ -116,6 +120,8 @@ namespace TestTask.Service.Cients.Implementation
                 }
             }
         }
+
+
         public void HandleEvent(JToken eventMessage)
         {
             string eventType = eventMessage["event"]?.ToString()!;
@@ -124,16 +130,16 @@ namespace TestTask.Service.Cients.Implementation
             switch (eventType)
             {
                 case "info":
-                    Console.WriteLine("Подключение Успешно");
+                    OnInfoMessage?.Invoke(this, eventMessage);
                     break;
                 case "subscribed":
-                    Console.WriteLine("Подписка на канал");
+                    OnSubscribeMessage?.Invoke(this, eventMessage);
                     break;
                 case "unsubscribed":
-                    Console.WriteLine($"Отписка от канала: {chanId}");
+                    OnSubscribeMessage?.Invoke(this, eventMessage);
                     break;
                 default:
-                    Console.WriteLine("Неизвестное событие");
+                    OnError?.Invoke(this, eventType);
                     break;
             }
         }
@@ -144,27 +150,32 @@ namespace TestTask.Service.Cients.Implementation
 
             if (array is null || array.Count == 0)
             {
-                Console.WriteLine("Массив пустой");
+                OnError.Invoke(this, "Пустой массив");
+                return;
             }
 
             if (array.Count == 6)
             {
-                Candle.HandleCandle(array);
+                var candle = new Candle();
+                candle.HandleCandle(array);
+
+
                 return;
             }
             var firstItem = array[0] as JArray;
 
             if (firstItem.Count == 4)
             {
-                Trade.HandleTrades(array);
+                new Trade().HandleTrades(array);
+                return;
             }
             else
             {
-                Candle.HandleCandle(array);
+                new Candle().HandleCandle(array);
+                return;
             }
-
-
         }
+
         public void Dispose()
         {
             _webSocket?.Dispose();

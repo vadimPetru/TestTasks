@@ -1,7 +1,12 @@
 ﻿using ConnectorTest;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using System.Collections.Concurrent;
 using TestHQ;
+using TestTask.Models.Enums;
 using TestTask.Models.Models;
+using TestTask.Models.Models.Event;
+using TestTask.Models.ResultObject;
 using TestTask.Service.Cients.Implementation;
 using TestTask.Service.Cients.Interfaces;
 
@@ -17,17 +22,22 @@ public class Connector : ITestConnector
     public event Action<Trade>? NewBuyTrade;
     public event Action<Trade>? NewSellTrade;
     public event Action<Candle>? CandleSeriesProcessing;
+    public event Func<JToken, Heartbeat> OnHeartbeatMessage;
+    public event Action<TradeExecutedEventArgs> TradeExecuted;
+    public event Action<TradeUpdatedEventArgs> TradeUpdated;
 
-    public Connector(IRestClient client)    
+
+    public Connector(IRestClient client)
     {
         _client = client;
         _tradeSubscriptions = new();
         _candleSubscriptions = new();
         _webSocketClient = new WebSocketClient("wss://api-pub.bitfinex.com/ws/2");
         _webSocketClient.OnMessageReceived += OnWebSocketMessageReceived!;
+        _webSocketClient.OnError += OnErrorHandler!;
     }
 
-    public async Task<IEnumerable<Trade>> GetNewTradesAsync(string pair, int maxCount = 0)
+    public async Task<Result<IEnumerable<Trade>>> GetNewTradesAsync(string pair, int maxCount = 0)
     {
         try
         {
@@ -37,11 +47,12 @@ public class Connector : ITestConnector
         }
         catch (Exception Ex)
         {
-            throw new Exception(Ex.Message);
+            return Result.Failure<IEnumerable<Trade>>(
+                new Error("01", Ex.Message));
         }
     }
 
-    public async Task<IEnumerable<Candle>> GetCandleSeriesAsync(string pair,
+    public async Task<Result<IEnumerable<Candle>>> GetCandleSeriesAsync(string pair,
         int periodInSec,
         DateTimeOffset? from,
         DateTimeOffset? to = null,
@@ -60,11 +71,12 @@ public class Connector : ITestConnector
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.Message);
+            return Result.Failure<IEnumerable<Candle>>(
+                new Error("02", ex.Message));
         }
     }
 
-    public async Task<Ticker> GetTicker(string symbol)
+    public async Task<Result<Ticker>> GetTicker(string symbol)
     {
         try
         {
@@ -73,14 +85,16 @@ public class Connector : ITestConnector
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.Message);
+
+            return Result.Failure<Ticker>(
+                new Error("03", ex.Message));
         }
     }
 
-   /// <summary>
-   /// Метод для прослушивания соединения
-   /// </summary>
-   /// <returns>Задачу</returns>
+    /// <summary>
+    /// Метод для прослушивания соединения
+    /// </summary>
+    /// <returns>Задачу</returns>
     public async Task Processing()
     {
         await _webSocketClient.ListenForMessageAsync();
@@ -95,6 +109,13 @@ public class Connector : ITestConnector
         await _webSocketClient.ConnectAsync();
     }
 
+
+    private void OnErrorHandler(object sender, string message)
+    {
+        throw new Exception(message);
+    }
+
+    #region MainHandler
     private void OnWebSocketMessageReceived(object sender, string message)
     {
         try
@@ -104,12 +125,12 @@ public class Connector : ITestConnector
 
             if (_webSocketClient.IsHeartbeat(messageJToken))
             {
-                Console.WriteLine($"IsHeartbeatMessage: {messageJToken}");
+                OnHeartbeatMessage?.Invoke(messageJToken);
             }
 
-            else if (Trade.IsMessageType(messageJToken))
+            else if (messageJToken is JArray array && array.Count == 3)
             {
-                Console.WriteLine($"MessageTypeHandler: {messageJToken}");
+                MessageTypeProcessed(messageJToken);
             }
 
             else if (messageJToken is JArray)
@@ -117,53 +138,90 @@ public class Connector : ITestConnector
                 _webSocketClient.HandleData(messageJToken);
             }
 
-            else if (messageJToken["event"].ToObject<string>() == "subscribed"
-                  && messageJToken["channel"].ToObject<string>() == "trades")
+            else if (messageJToken[nameof(JsonName.@event)].ToObject<string>() == nameof(EventType.subscribed)
+                  && messageJToken[nameof(JsonName.channel)].ToObject<string>() == "trades")
             {
 
-                var key = new SubscriptionKey(messageJToken["symbol"]!.ToObject<string>()!,
-                    messageJToken["channel"]!.ToObject<string>()!
+                var key = new SubscriptionKey(messageJToken[nameof(JsonName.symbol)]!.ToObject<string>()!,
+                    messageJToken[nameof(JsonName.channel)]!.ToObject<string>()!
                     );
 
                 _tradeSubscriptions.TryGetValue(key,
                     out var result);
 
-                result.ChangeModel(string.Empty,messageJToken["chanId"]!.ToObject<int>()!);
-                
+                result.ChangeModel(string.Empty, messageJToken[nameof(JsonName.chanId)]!.ToObject<int>()!);
+
             }
-            else if (messageJToken["event"].ToObject<string>() == "subscribed"
-                && messageJToken["channel"].ToObject<string>() == "candles")
+            else if (messageJToken[nameof(JsonName.@event)].ToObject<string>() == nameof(EventType.subscribed)
+                && messageJToken[nameof(JsonName.channel)].ToObject<string>() == "candles")
             {
-               
-                                                                  
+
+
                 var key = new SubscriptionKey(messageJToken["key"]!.ToObject<string>()
                                                                     .Split(':')
                                                                     .Last(),
-                    messageJToken["channel"]!.ToObject<string>()!
+                    messageJToken[nameof(JsonName.channel)]!.ToObject<string>()!
                     );
 
                 _candleSubscriptions.TryGetValue(key,
                     out var result);
 
-                result.ChangeModel(string.Empty, messageJToken["chanId"]!.ToObject<int>()!);
+                result.ChangeModel(string.Empty, messageJToken[nameof(JsonName.chanId)]!.ToObject<int>()!);
 
             }
-            else if (messageJToken["event"] != null)
+            else if (messageJToken[nameof(JsonName.@event)] != null)
             {
-               _webSocketClient.HandleEvent(messageJToken);
+                _webSocketClient.HandleEvent(messageJToken);
             }
-        }catch(Exception ex)
-        {
-            Console.WriteLine($"{ex.Message}");
         }
-      
+        catch (Exception ex)
+        {
+            OnErrorHandler(this, ex.Message);
+        }
+
     }
+    #endregion
+
+    #region Handlers для обработки допалнительной информации
+    private void MessageTypeProcessed(JToken message)
+    {
+
+        int channelId = message[0].ToObject<int>();
+        string msgType = message[1].ToObject<string>();
+        var tradeData = message[2];
+
+        var _handlers = new ConcurrentDictionary<string, Action<int, object>>();
+
+        _handlers.TryAdd("te", HandlerTradeExecuted);
+        _handlers.TryAdd("tu", HandlerTradeUpdated);
+
+
+        if (_handlers.TryGetValue(msgType, out var handler))
+        {
+            handler(channelId, tradeData);
+
+        }
+
+
+    }
+
+    private void HandlerTradeExecuted(int channelId, object tradeData)
+    {
+        TradeExecuted?.Invoke(new TradeExecutedEventArgs(channelId, tradeData));
+    }
+    private void HandlerTradeUpdated(int channelId, object tradeData)
+    {
+        TradeUpdated?.Invoke(new TradeUpdatedEventArgs(channelId, tradeData));
+    }
+    #endregion
+
+    #region Trades
     public async Task SubscribeTrades(string symbol, int maxCount = 100)
     {
         var key = new SubscriptionKey(symbol, "trades");
         if (!_tradeSubscriptions.ContainsKey(key))
         {
-            _tradeSubscriptions[key] = Subscription.CreateInstance(0,"trades",maxCount);
+            _tradeSubscriptions[key] = Subscription.CreateInstance(0, "trades", maxCount);
             var message = new SubscribeTradeMessage("subscribe",
                 "trades",
                 symbol
@@ -175,19 +233,21 @@ public class Connector : ITestConnector
     public async Task UnsubscribeTrades(string symbol)
     {
         var key = new SubscriptionKey(symbol, "trades");
-      
+
         if (_tradeSubscriptions.ContainsKey(key))
         {
             _tradeSubscriptions.TryGetValue(key, out var value);
-            var message = new UnSubscribeTradeMessage(@event:"unsubscribe",
+            var message = new UnSubscribeTradeMessage(@event: "unsubscribe",
               chanId: value.ChanId
             );
-           
+
             await _webSocketClient.SendEventAsync(message);
             _tradeSubscriptions.Remove(key);
         }
     }
+    #endregion
 
+    #region Candle
     public async Task SubscribeCandles(string pair,
         int periodInSec,
         DateTimeOffset? from = null,
@@ -195,15 +255,15 @@ public class Connector : ITestConnector
         long? count = 0
         )
     {
-       
+
         var key = new SubscriptionKey(pair, "candles");
         if (!_candleSubscriptions.ContainsKey(key))
         {
-            _candleSubscriptions[key] = Subscription.CreateInstance(0,"candles",100);
+            _candleSubscriptions[key] = Subscription.CreateInstance(0, "candles", 100);
             var period = FrameConvert.ConvertPeriodIntSecToString(periodInSec);
 
             string candle = $"trade:{period}:{pair}";
-           
+
 
             var message = new SubscribeCandleMessage("subscribe",
                 "candles", candle);
@@ -218,7 +278,7 @@ public class Connector : ITestConnector
         var keys = _candleSubscriptions.Keys
             .Where(candle => candle.symbol.StartsWith(pair))
             .ToList();
-      
+
         foreach (var keyRemove in keys)
         {
             var chanId = _candleSubscriptions[keyRemove].ChanId;
@@ -229,6 +289,7 @@ public class Connector : ITestConnector
             _candleSubscriptions.Remove(keyRemove);
         }
     }
+#endregion
 
     public void Dispose()
     {
@@ -236,5 +297,5 @@ public class Connector : ITestConnector
     }
 
 
-  
+
 }

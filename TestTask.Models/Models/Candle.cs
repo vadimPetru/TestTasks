@@ -45,12 +45,14 @@ public class Candle
     /// </summary>
     public DateTimeOffset OpenTime { get; set; }
 
+    public event Action<Candle> OnCandleMapping;
+
     #region Handler Для метчинга данных
     /// <summary>
     /// Обработчик для матчинга данных
     /// </summary>
     /// <param name="array">Массив данных пришедший с внешнего апи</param>
-    public static void HandleCandle(JArray array)
+    public void HandleCandle(JArray array)
     {
         if (array.Count == 6)
         {
@@ -64,7 +66,7 @@ public class Candle
                 TotalPrice = array[5].ToObject<decimal>() * array[2].ToObject<decimal>(),
                 TotalVolume = array[5].ToObject<decimal>()
             };
-            Console.WriteLine($"ClosePrice:{item.ClosePrice} , HighPrice:{item.HighPrice}");
+            OnCandleMapping?.Invoke(item);
             return;
         }
 
@@ -80,7 +82,7 @@ public class Candle
                 TotalPrice = candle[5].ToObject<decimal>() * candle[2].ToObject<decimal>(),
                 TotalVolume = candle[5].ToObject<decimal>()
             };
-            Console.WriteLine($"ClosePrice:{item.ClosePrice} , HighPrice:{item.HighPrice}");
+            OnCandleMapping?.Invoke(item);
         }
     }
     # endregion
