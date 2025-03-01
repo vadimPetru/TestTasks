@@ -17,4 +17,8 @@
     <ProjectReference Include="..\TestTask.Models\TestTask.Models.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="HandleProcessing\Interface\" />
+  </ItemGroup>
+
 </Project>

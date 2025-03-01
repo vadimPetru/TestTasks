@@ -5,5 +5,6 @@ public enum JsonName
     @event,
     channel,
     chanId,
-    symbol
+    symbol,
+    key
 }

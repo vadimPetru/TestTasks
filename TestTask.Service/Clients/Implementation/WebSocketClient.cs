@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using TestHQ;
+using TestTask.Models.Enums;
 using TestTask.Service.Cients.Interfaces;
 
 namespace TestTask.Service.Cients.Implementation
@@ -124,18 +125,18 @@ namespace TestTask.Service.Cients.Implementation
 
         public void HandleEvent(JToken eventMessage)
         {
-            string eventType = eventMessage["event"]?.ToString()!;
-            string chanId = eventMessage["chanId"]?.ToString()!;
+            string eventType = eventMessage[nameof(JsonName.@event)]?.ToString()!;
+            string chanId = eventMessage[nameof(JsonName.chanId)]?.ToString()!;
 
             switch (eventType)
             {
-                case "info":
+                case nameof(EventType.info):
                     OnInfoMessage?.Invoke(this, eventMessage);
                     break;
-                case "subscribed":
+                case nameof(EventType.subscribed):
                     OnSubscribeMessage?.Invoke(this, eventMessage);
                     break;
-                case "unsubscribed":
+                case nameof(EventType.unsubscribed):
                     OnSubscribeMessage?.Invoke(this, eventMessage);
                     break;
                 default:

@@ -16,7 +16,14 @@ public class Connector : ITestConnector
 {
     private readonly IRestClient _client;
     private readonly IWebSocketClient _webSocketClient;
+
+    /// <summary>
+    /// Коллекция для подписок Trades
+    /// </summary>
     private readonly Dictionary<SubscriptionKey, Subscription>? _tradeSubscriptions;
+    /// <summary>
+    /// Коллекция для подписок Candles
+    /// </summary>
     private readonly Dictionary<SubscriptionKey, Subscription>? _candleSubscriptions;
 
     public event Action<Trade>? NewBuyTrade;
@@ -109,11 +116,12 @@ public class Connector : ITestConnector
         await _webSocketClient.ConnectAsync();
     }
 
-
+    #region MaunHanlder Erros
     private void OnErrorHandler(object sender, string message)
     {
         throw new Exception(message);
     }
+    #endregion
 
     #region MainHandler
     private void OnWebSocketMessageReceived(object sender, string message)
@@ -139,7 +147,7 @@ public class Connector : ITestConnector
             }
 
             else if (messageJToken[nameof(JsonName.@event)].ToObject<string>() == nameof(EventType.subscribed)
-                  && messageJToken[nameof(JsonName.channel)].ToObject<string>() == "trades")
+                  && messageJToken[nameof(JsonName.channel)].ToObject<string>() == nameof(ChannelName.trades))
             {
 
                 var key = new SubscriptionKey(messageJToken[nameof(JsonName.symbol)]!.ToObject<string>()!,
@@ -153,11 +161,11 @@ public class Connector : ITestConnector
 
             }
             else if (messageJToken[nameof(JsonName.@event)].ToObject<string>() == nameof(EventType.subscribed)
-                && messageJToken[nameof(JsonName.channel)].ToObject<string>() == "candles")
+                && messageJToken[nameof(JsonName.channel)].ToObject<string>() == nameof(ChannelName.candles))
             {
 
 
-                var key = new SubscriptionKey(messageJToken["key"]!.ToObject<string>()
+                var key = new SubscriptionKey(messageJToken[nameof(JsonName.key)]!.ToObject<string>()
                                                                     .Split(':')
                                                                     .Last(),
                     messageJToken[nameof(JsonName.channel)]!.ToObject<string>()!
@@ -218,12 +226,16 @@ public class Connector : ITestConnector
     #region Trades
     public async Task SubscribeTrades(string symbol, int maxCount = 100)
     {
-        var key = new SubscriptionKey(symbol, "trades");
+        var key = new SubscriptionKey(symbol, nameof(ChannelName.trades));
         if (!_tradeSubscriptions.ContainsKey(key))
         {
-            _tradeSubscriptions[key] = Subscription.CreateInstance(0, "trades", maxCount);
-            var message = new SubscribeTradeMessage("subscribe",
-                "trades",
+            _tradeSubscriptions[key] = Subscription.CreateInstance(0,
+                nameof(ChannelName.trades),
+                maxCount
+                );
+
+            var message = new SubscribeTradeMessage(nameof(EventType.subscribed),
+               nameof(ChannelName.trades),
                 symbol
             );
             await _webSocketClient.SendEventAsync(message);
@@ -232,12 +244,12 @@ public class Connector : ITestConnector
 
     public async Task UnsubscribeTrades(string symbol)
     {
-        var key = new SubscriptionKey(symbol, "trades");
+        var key = new SubscriptionKey(symbol, nameof(ChannelName.trades));
 
         if (_tradeSubscriptions.ContainsKey(key))
         {
             _tradeSubscriptions.TryGetValue(key, out var value);
-            var message = new UnSubscribeTradeMessage(@event: "unsubscribe",
+            var message = new UnSubscribeTradeMessage(nameof(EventType.unsubscribed),
               chanId: value.ChanId
             );
 
@@ -256,19 +268,21 @@ public class Connector : ITestConnector
         )
     {
 
-        var key = new SubscriptionKey(pair, "candles");
+        var key = new SubscriptionKey(pair, nameof(ChannelName.candles));
         if (!_candleSubscriptions.ContainsKey(key))
         {
-            _candleSubscriptions[key] = Subscription.CreateInstance(0, "candles", 100);
+            _candleSubscriptions[key] = Subscription.CreateInstance(0, nameof(ChannelName.candles), 100);
             var period = FrameConvert.ConvertPeriodIntSecToString(periodInSec);
 
             string candle = $"trade:{period}:{pair}";
 
 
-            var message = new SubscribeCandleMessage("subscribe",
-                "candles", candle);
-            await _webSocketClient.SendEventAsync(message
-                 );
+            var message = new SubscribeCandleMessage(nameof(EventType.subscribed),
+                nameof(ChannelName.candles),
+                candle
+                );
+
+            await _webSocketClient.SendEventAsync(message);
         }
     }
 
@@ -282,7 +296,10 @@ public class Connector : ITestConnector
         foreach (var keyRemove in keys)
         {
             var chanId = _candleSubscriptions[keyRemove].ChanId;
-            var message = new UnSubscribeCandleMessage("unsubscribe", chanId);
+
+            var message = new UnSubscribeCandleMessage(nameof(EventType.unsubscribed),
+                chanId
+                );
 
 
             await _webSocketClient.SendEventAsync(message);
