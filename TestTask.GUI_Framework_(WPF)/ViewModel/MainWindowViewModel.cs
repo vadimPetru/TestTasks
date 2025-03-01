@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using TestHQ;
 using TestTask.GUI_Framework__WPF_.Infrastructure.Commands;
+using TestTask.GUI_Framework__WPF_.View.Windows;
 using TestTask.GUI_Framework__WPF_.ViewModel.Base;
 
 namespace TestTask.GUI_Framework__WPF_.ViewModel;
@@ -111,12 +112,22 @@ internal class MainWindowViewModel : ViewModelBase
 
         try
         {
+            var modelView = new ModelWindow();
+            var viewModel = modelView.DataContext as ModelWindowViewModel;
+
+        
 
             Trades = new();
+
             var result = await _connector.GetNewTradesAsync("tBTCUSD", 100);
 
+            if (result.IsFailure)
+            {
+                throw new Exception("Ошибка при получения данных");
+            }
+
             Trades.Clear();
-            foreach (var trade in result)
+            foreach (var trade in result.Value)
             {
                 Trades.Add(trade);
             }
@@ -149,13 +160,19 @@ internal class MainWindowViewModel : ViewModelBase
                 60,
                 DateTimeOffset.UtcNow.AddDays(-1),
                 count: 30);
+
+            if (result.IsFailure)
+            {
+                throw new Exception("Ошибка получения данных");
+            }
             Candles.Clear();
-            foreach(var candle in result)
+            foreach (var candle in result.Value)
             {
                 Candles.Add(candle);
             }
             CurrentCollection = null;
             CurrentCollection = Candles;
+
         }
         catch (Exception ex)
         {

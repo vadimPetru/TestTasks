@@ -1,9 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System.Reflection.Metadata;
 using TestHQ;
 using TestTask.Models.Models.Event;
 using TestTask.Service.Cients.Implementation;
 using TestTask.Service.Cients.Interfaces;
 using TestTask.Service.Connector.Implementation;
+using TestTask.Service.HandleProcessing.Implementation;
+using TestTask.Service.HandleProcessing.Interface;
 
 var services = new ServiceCollection();
 
@@ -15,7 +18,7 @@ services.AddSingleton<IRestClient>(provider =>
     return new RestClient(httpClientFactory);
 });
 
-
+services.AddSingleton<IHandler, Handler>();
 services.AddSingleton<Connector>();
 
 var serviceProvider = services.BuildServiceProvider();
@@ -42,7 +45,7 @@ connector.NewBuyTrade += trade => Console.WriteLine($"New buy trade: {trade}");
 connector.NewSellTrade += trade => Console.WriteLine($"New sell trade: {trade}");
 await connector.SubscribeTrades("tBTCUSD");
 await connector.SubscribeCandles("tBTCUSD",
-    60,
+60,
     DateTimeOffset.UtcNow.AddDays(-1),
     count: 30
     );

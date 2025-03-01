@@ -1,4 +1,6 @@
-﻿using System.Windows.Input;
+﻿using System.Runtime.CompilerServices;
+using System.Windows.Input;
+using TestHQ;
 using TestTask.GUI_Framework__WPF_.Infrastructure.Commands;
 using TestTask.GUI_Framework__WPF_.View.Modal;
 using TestTask.GUI_Framework__WPF_.ViewModel.Base;
@@ -40,11 +42,22 @@ namespace TestTask.GUI_Framework__WPF_.ViewModel
         public void OnCancelCommandExecuted(object p) => OnDialogClosed?.Invoke(this, false);
         #endregion
 
+        public void LoadDynamicContent(string ContentName)
+        {
+            if(ContentName == "Candle")
+                DialogContent = new CandleContent();
+            DialogContent = new TradeContent();
+        }
+
+
+     
         public event EventHandler<bool> OnDialogClosed;
         public ModelWindowViewModel()
         {
             OkCommand = new OkCommand(OnOkCommandExecuted, CanOkCommandExecute);
             CancelCommand = new CancelCommand(OnCancelCommandExecuted, CanCancelCommandExecute);
+
+            LoadDynamicContent("Candle");
         }
     }
 }

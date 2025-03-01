@@ -10,6 +10,8 @@ using TestTask.GUI_Framework__WPF_.ViewModel;
 using TestTask.GUI_Framework__WPF_.ViewModel.Modal;
 using TestTask.GUI_Framework__WPF_.View.Windows;
 using TestTask.GUI_Framework__WPF_.View.Modal;
+using TestTask.Service.HandleProcessing.Interface;
+using TestTask.Service.HandleProcessing.Implementation;
 namespace TestTask.GUI_Framework__WPF_
 {
 
@@ -33,7 +35,7 @@ namespace TestTask.GUI_Framework__WPF_
                         var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
                         return new RestClient(httpClientFactory);
                     });
-
+                    services.AddSingleton<IHandler, Handler>();
                     services.AddSingleton<MainWindowViewModel>();
                     services.AddSingleton<ModelWindowViewModel>();
                     services.AddSingleton<CandleContentViewModel>();

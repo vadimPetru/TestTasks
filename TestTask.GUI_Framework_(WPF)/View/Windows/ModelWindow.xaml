@@ -4,8 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:TestTask.GUI_Framework__WPF_.View.Windows"
+             xmlns:vm="clr-namespace:TestTask.GUI_Framework__WPF_.ViewModel"
              mc:Ignorable="d" 
              d:DesignHeight="150" d:DesignWidth="300">
+    <UserControl.DataContext>
+        <vm:ModelWindowViewModel/>
+    </UserControl.DataContext>
     <Border Background="White" Padding="10" BorderBrush="Gray" BorderThickness="1">
     <Grid Margin="10">
         <Grid.RowDefinitions>

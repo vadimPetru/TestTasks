@@ -9,6 +9,7 @@ namespace TestTask.GUI_Framework__WPF_.View.Windows
         public ModelWindow()
         {
             InitializeComponent();
+           
             DataContext = new ModelWindowViewModel();
         }
     }

@@ -52,7 +52,6 @@ namespace TestTask.Service.Cients.Implementation
 
             try
             {
-
                 string jsonMessage = JsonConvert.SerializeObject(message);
                 byte[] buffer = Encoding.UTF8.GetBytes(jsonMessage);
                 await _webSocket.SendAsync(new ArraySegment<byte>(buffer),
@@ -121,62 +120,6 @@ namespace TestTask.Service.Cients.Implementation
                 }
             }
         }
-
-
-        public void HandleEvent(JToken eventMessage)
-        {
-            string eventType = eventMessage[nameof(JsonName.@event)]?.ToString()!;
-            string chanId = eventMessage[nameof(JsonName.chanId)]?.ToString()!;
-
-            switch (eventType)
-            {
-                case nameof(EventType.info):
-                    OnInfoMessage?.Invoke(this, eventMessage);
-                    break;
-                case nameof(EventType.subscribed):
-                    OnSubscribeMessage?.Invoke(this, eventMessage);
-                    break;
-                case nameof(EventType.unsubscribed):
-                    OnSubscribeMessage?.Invoke(this, eventMessage);
-                    break;
-                default:
-                    OnError?.Invoke(this, eventType);
-                    break;
-            }
-        }
-        public void HandleData(JToken messageData)
-        {
-            var channelId = messageData[0].ToObject<int>();
-            var array = messageData[1] as JArray;
-
-            if (array is null || array.Count == 0)
-            {
-                OnError.Invoke(this, "Пустой массив");
-                return;
-            }
-
-            if (array.Count == 6)
-            {
-                var candle = new Candle();
-                candle.HandleCandle(array);
-
-
-                return;
-            }
-            var firstItem = array[0] as JArray;
-
-            if (firstItem.Count == 4)
-            {
-                new Trade().HandleTrades(array);
-                return;
-            }
-            else
-            {
-                new Candle().HandleCandle(array);
-                return;
-            }
-        }
-
         public void Dispose()
         {
             _webSocket?.Dispose();

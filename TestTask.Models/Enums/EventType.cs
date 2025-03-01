@@ -2,7 +2,9 @@
 
 public enum EventType
 {
+    subscribe,
     subscribed,
+    unsubscribe,
     unsubscribed,
     info
 }

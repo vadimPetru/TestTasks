@@ -34,29 +34,7 @@ public class Trade
     /// </summary>
     public DateTimeOffset Time { get; set; }
 
-    public Action<Trade> OnTradeMapping;
-    #region Handler для метчинг модели trade
-    /// <summary>
-    ///  Мэтчинг данных
-    /// </summary>
-    /// <param name="array">Коллекция данных из внешнего апи</param>
-    public void HandleTrades(JArray array)
-    {
-        foreach (var trade in array)
-        {
-            var item = new Trade()
-            {
-                Id = trade[0].ToString(),
-                Time = DateTimeOffset.FromUnixTimeMilliseconds((long)trade[1]),
-                Amount = trade[2].ToObject<decimal>(),
-                Price = trade[3].ToObject<decimal>(),
-                Side = trade[2].ToObject<decimal>() < 0 ? "sell" : "buy"
-            };
-            OnTradeMapping?.Invoke(this);
-        }
-    }
-    #endregion
-
+  
 
 
      
