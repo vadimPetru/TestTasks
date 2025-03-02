@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using TestHQ;
 using TestTask.GUI_Framework__WPF_.Infrastructure.Commands;
+using TestTask.GUI_Framework__WPF_.Model;
 using TestTask.GUI_Framework__WPF_.ViewModel.Base;
 using TestTask.Service.Connector.Implementation;
 
@@ -143,7 +144,7 @@ internal class MainWindowViewModel : ViewModelBase
             }
             CurrentCollection = Trades;
 
-            }
+        }
         catch (Exception ex)
         {
             MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -202,11 +203,13 @@ internal class MainWindowViewModel : ViewModelBase
             Buy.Clear();
             await _connector.ConnectAsync();
             await _connector.SubscribeTrades("tBTCUSD", 100);
-            _connector.NewBuyTrade += (sender, trade) => {
+            _connector.NewBuyTrade += (sender, trade) =>
+            {
                 Application.Current.Dispatcher.Invoke(() => Buy.Add(trade));
             };
-               
-            _connector.NewSellTrade += (sender, trade) => {
+
+            _connector.NewSellTrade += (sender, trade) =>
+            {
                 Application.Current.Dispatcher.Invoke(() => Buy.Add(trade));
             };
 
@@ -214,19 +217,19 @@ internal class MainWindowViewModel : ViewModelBase
             _connector.Processing();
 
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             await _connector.UnsubscribeTrades("tBTCUSD");
         }
-      
-       
-        
+
+
+
     }
     #endregion
 
     #region Unsubscribe Trade
-     public ICommand UnSubscribeTradeCommand { get; }
+    public ICommand UnSubscribeTradeCommand { get; }
 
     private bool CanUnSubscribeTradeCommandExecute(object p) => true;
 
@@ -265,7 +268,7 @@ internal class MainWindowViewModel : ViewModelBase
              count: 30
                  );
 
-            _connector.CandleSeriesProcessing +=  candle => Candle.Add(candle);
+            _connector.CandleSeriesProcessing += candle => Candle.Add(candle);
             CurrentCollectionWebSocket = Candle;
             _connector.Processing();
 
@@ -302,7 +305,113 @@ internal class MainWindowViewModel : ViewModelBase
 
     #endregion
 
+    #region Валюты 
 
+    private decimal _btc;
+    public decimal BTC { get => _btc; set => Set(ref _btc, value); }
+
+    private decimal _xrp;
+    public decimal XRP { get => _xrp; set => Set(ref _xrp, value); }
+
+    private decimal _xmr;
+    public decimal XMR { get => _xmr; set => Set(ref _xmr, value); }
+
+    private decimal _dash;
+    public decimal Dash { get => _dash; set => Set(ref _dash, value); }
+
+    private string _selectedCurrency;
+    public string SelectedCurrency { get => _selectedCurrency; set => Set(ref _selectedCurrency, value); }
+
+
+
+    public ICommand CalculatedCWallet { get; }
+    public bool OnCalculatedCWalletExecute(object p) => true;
+    public void CanCalculatedCWalletExecuted(object p)
+    {
+        if (BTC < 0 || XRP < 0 || XMR < 0 || Dash < 0)
+        {
+            return;
+        }
+
+        var dictionary = new Dictionary<decimal, List<Currency>>() {
+
+            { BTC , new List<Currency>(){
+
+             new Currency("USDT", 93408.13m),
+             new Currency("XRP", 32776.57m),
+             new Currency("DASH", 3411.86m),
+             new Currency("XMR", 411.9m)
+            }
+            },
+
+
+            { XRP , new List<Currency>()
+            {
+                new Currency("USDT", 2.86m),
+                new Currency("BTC", 0.00003m),
+                new Currency("DASH", 0.1m),
+                new Currency("XMR",0.012575m)
+            }},
+           
+
+            { XMR ,new List<Currency>()
+            {
+                 new Currency("USDT", 227.44m),
+                 new Currency("XRP", 79.52m),
+                 new Currency("DASH", 8.29m),
+                 new Currency("BTC", 0.002424m)
+            }},
+            
+
+            { Dash ,new List<Currency>()
+            {
+                new Currency("USDT", 27.46m),
+                new Currency("XRP", 9.57m),
+                new Currency("DASH", 0.000293m),
+                new Currency("XMR", 0.12m)
+            }},
+        };
+
+        var taskBTC = Task.Run(() =>
+        {
+            foreach (var item in dictionary[BTC])
+            {
+                decimal result = +BTC * item.Rates;
+            }
+        });
+
+        var taskXRP = Task.Run(() =>
+        {
+            foreach (var item in dictionary[BTC])
+            {
+                decimal result = +XRP * item.Rates;
+            }
+        });
+        var taskXRM = Task.Run(() =>
+        {
+            foreach (var item in dictionary[BTC])
+            {
+                decimal result = +Dash * item.Rates;
+            }
+        });
+        var taskDASH = Task.Run(() =>
+        {
+            foreach (var item in dictionary[BTC])
+            {
+                decimal result = +XMR * item.Rates;
+            }
+        });
+        var taskUSDT = Task.Run(() =>
+        {
+            foreach (var item in dictionary[BTC])
+            {
+                decimal result = +BTC * item.Rates;
+            }
+        });
+
+    }
+
+    #endregion
     private readonly ITestConnector _connector;
 
     public MainWindowViewModel()
@@ -320,10 +429,10 @@ internal class MainWindowViewModel : ViewModelBase
         SubscribeCandleCommand = new SubscribeCandleWebSocketCommand(OnSubscribeCandleCommandExecuted, CanSubscribeCandleCommandExecute);
         UnSubscribeCandleCommand = new UnSubscribeCandleWebSocketCommand(OnSubscribeCandleCommandExecuted, CanUnSubscribeCandleCommandExecute);
         #endregion
-      
+
         _connector = connector;
-       
-      
-       
+
+
+
     }
 }

@@ -75,6 +75,34 @@
                   VerticalAlignment="Stretch" />
                 </Grid>
             </TabItem>
+            <TabItem Header="Calculate Balance ">
+                <StackPanel>
+                    <Label Content="BTC:" />
+                    <TextBox Text="{Binding BTC, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <Label Content="XRP:" />
+                    <TextBox Text="{Binding XRP, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <Label Content="XMR:" />
+                    <TextBox Text="{Binding Xr, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <Label Content="DASH:" />
+                    <TextBox Text="{Binding DASH, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <Label Content="Выберите валюту:" />
+                    <ComboBox x:Name="CurrencySelector" SelectedItem="{Binding SelectedCurrency}">
+                        <ComboBoxItem Content="BTC" />
+                        <ComboBoxItem Content="XRP" />
+                        <ComboBoxItem Content="XMR" />
+                        <ComboBoxItem Content="DASH" />
+                        <ComboBoxItem Content="USDT" />
+                    </ComboBox>
+
+                    <Label Content="Результат:" />
+                    <TextBox Text="{Binding SUMM, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>

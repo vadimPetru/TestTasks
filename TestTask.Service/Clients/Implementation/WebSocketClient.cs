@@ -92,7 +92,7 @@ namespace TestTask.Service.Cients.Implementation
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
                         await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,
-                            "Соединение закрыто",
+                            "close",
                             _ctx.Token
                             );
                     }
