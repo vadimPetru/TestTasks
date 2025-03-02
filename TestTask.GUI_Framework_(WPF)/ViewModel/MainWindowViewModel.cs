@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using TestHQ;
 using TestTask.GUI_Framework__WPF_.Infrastructure.Commands;
-using TestTask.GUI_Framework__WPF_.View.Windows;
+using TestTask.GUI_Framework__WPF_.Model.Enum;
 using TestTask.GUI_Framework__WPF_.ViewModel.Base;
 
 namespace TestTask.GUI_Framework__WPF_.ViewModel;
@@ -89,6 +89,24 @@ internal class MainWindowViewModel : ViewModelBase
     }
     #endregion
 
+    #region Коллекция для WebSocket TradeBuy
+    private ObservableCollection<Trade> _buy;
+    public ObservableCollection<Trade> Buy
+    {
+        get => _buy;
+        set => Set(ref _buy, value);
+    }
+    #endregion
+    #region Коллекция для WebSocket TradeSell
+    private ObservableCollection<Trade> _sell;
+    public ObservableCollection<Trade> Sell
+    {
+        get => _sell;
+        set => Set(ref _sell, value);
+    }
+
+    #endregion
+
     #region Видимость окна
 
     private bool _isModalVisible;
@@ -99,10 +117,7 @@ internal class MainWindowViewModel : ViewModelBase
     }
     #endregion
 
-    #region Команды Rest
-
     #region Команда для Торгов
-    public ICommand ShowTradesCommand { get;}
     public ICommand FetchTradeDataCommand { get; }
 
     private bool CanFetchDataCommandExecute(object p) => true;
@@ -112,11 +127,6 @@ internal class MainWindowViewModel : ViewModelBase
 
         try
         {
-            var modelView = new ModelWindow();
-            var viewModel = modelView.DataContext as ModelWindowViewModel;
-
-        
-
             Trades = new();
 
             var result = await _connector.GetNewTradesAsync("tBTCUSD", 100);
@@ -185,14 +195,44 @@ internal class MainWindowViewModel : ViewModelBase
     }
     #endregion
 
+
+    #region Команды WebSocket
+    public ICommand SubscribeTradeCommand { get; }
+    private bool CanSubscribeTradeCommandExecute(object p) => true;
+
+    private async void OnSubscribeTradeCommandExecuted(object p)
+    {
+        try
+        {
+            Buy = new();
+          
+            await _connector.ConnectAsync();
+            await _connector.SubscribeTrades("tBTCUSD", 100);
+            _connector.NewBuyTrade += (sender, trade) => {
+                Application.Current.Dispatcher.Invoke(() => Buy.Add(trade));
+            };
+               
+            _connector.NewSellTrade += (sender, trade) => {
+                Application.Current.Dispatcher.Invoke(() => Buy.Add(trade));
+            };
+
+            _connector.Processing();
+
+        }
+        catch(Exception ex)
+        {
+            MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            await _connector.UnsubscribeTrades("tBTCUSD");
+        }
+      
+       
+        
+    }
     #endregion
 
-    #region Модельное окно
-
-    #endregion
 
     private readonly ITestConnector _connector;
-    private readonly ModelWindowViewModel _model = new();
+    
 
     public MainWindowViewModel()
     {
@@ -204,7 +244,7 @@ internal class MainWindowViewModel : ViewModelBase
 
         FetchTradeDataCommand = new TradeRestCommand(OnFetchDataCommandExecuted, CanFetchDataCommandExecute);
         FetchCandleDataCommand = new CandleRestCommand(OnFetchCandleDataCommandExecuted, CanFetchCandleDataCommandExecute);
-
+        SubscribeTradeCommand = new SubscribeTradeWebSocketCommand(OnSubscribeTradeCommandExecuted, CanSubscribeTradeCommandExecute);
         #endregion
 
         _connector = connector;

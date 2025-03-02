@@ -37,8 +37,20 @@ namespace TestTask.Service.HandleProcessing.Implementation
         }
         public void HandleData(JToken messageData)
         {
-            var channelId = messageData[0].ToObject<int>();
+            var additionalArray = messageData as JArray;
+            if(additionalArray.Count == 3)
+            {
+                if(additionalArray[1].ToObject<string>() == "te" ||
+                    additionalArray[1].ToObject<string>() == "tu")
+                {
+                    var list = additionalArray[2] as JArray;
+                    HandleTrades(list);
+                    return;
+                }
+            }
             var array = messageData[1] as JArray;
+            var channelId = messageData[0].ToObject<int>();
+           
             
 
             if (array is null || array.Count == 0)
@@ -74,6 +86,20 @@ namespace TestTask.Service.HandleProcessing.Implementation
         /// <param name="array">Коллекция данных из внешнего апи</param>
         public void HandleTrades(JArray array)
         {
+            if(array.Count == 4)
+            {
+                var item = new Trade()
+                {
+                    Id = array[0].ToString(),
+                    Time = DateTimeOffset.FromUnixTimeMilliseconds((long)array[1]),
+                    Amount = array[2].ToObject<decimal>(),
+                    Price = array[3].ToObject<decimal>(),
+                    Side = array[2].ToObject<decimal>() < 0 ? "sell" : "buy"
+                };
+                OnTradeMapping?.Invoke(this, item);
+                return;
+            }
+            
             foreach (var trade in array)
             {
                 var item = new Trade()

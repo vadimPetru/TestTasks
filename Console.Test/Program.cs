@@ -41,8 +41,8 @@ try
 
 
 await connector.ConnectAsync();
-connector.NewBuyTrade += trade => Console.WriteLine($"New buy trade: {trade}");
-connector.NewSellTrade += trade => Console.WriteLine($"New sell trade: {trade}");
+connector.NewBuyTrade += (sender , trade) => Console.WriteLine($"New buy trade: {trade.Id}");
+connector.NewSellTrade += (sender ,trade )=> Console.WriteLine($"New sell trade: {trade.Id}");
 await connector.SubscribeTrades("tBTCUSD");
 await connector.SubscribeCandles("tBTCUSD",
 60,
@@ -52,7 +52,7 @@ await connector.SubscribeCandles("tBTCUSD",
 connector.TradeExecuted += TradeExecuted;
 connector.TradeUpdated += TradeUpdated;
 connector.Processing();
-await Task.Delay(15000); // Ждем 25 секунд
+await Task.Delay(150000); // Ждем 25 секунд
 await connector.UnsubscribeTrades("tBTCUSD");
 await connector.UnsubscribeCandles("tBTCUSD");
 Console.ReadKey();

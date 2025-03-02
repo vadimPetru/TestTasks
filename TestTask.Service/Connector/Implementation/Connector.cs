@@ -29,8 +29,8 @@ public class Connector : ITestConnector
     /// <summary>
     /// Для канала Trade
     /// </summary>  
-    public event Action<Trade>? NewBuyTrade;
-    public event Action<Trade>? NewSellTrade;
+    public event EventHandler<Trade>? NewBuyTrade;
+    public event EventHandler<Trade>? NewSellTrade;
     /// <summary>
     /// Для канала Candle
     /// </summary>  
@@ -62,10 +62,10 @@ public class Connector : ITestConnector
     {
         if(trade.Side is "sell")
         {
-            NewBuyTrade?.Invoke(trade);
+           NewBuyTrade?.Invoke(this,trade);
             return;
         }
-        NewSellTrade?.Invoke(trade);
+        NewSellTrade?.Invoke(this,trade);
     }
 
     /// <summary>
@@ -264,7 +264,7 @@ public class Connector : ITestConnector
 
         _handlers.TryAdd("te", HandlerTradeExecuted);
         _handlers.TryAdd("tu", HandlerTradeUpdated);
-
+        _handler.HandleData(message);
 
         if (_handlers.TryGetValue(msgType, out var handler))
         {
@@ -277,6 +277,7 @@ public class Connector : ITestConnector
 
     private void HandlerTradeExecuted(int channelId, object tradeData)
     {
+        
         TradeExecuted?.Invoke(new TradeExecutedEventArgs(channelId, tradeData));
     }
     private void HandlerTradeUpdated(int channelId, object tradeData)

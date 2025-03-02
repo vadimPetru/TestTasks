@@ -20,12 +20,12 @@ public interface ITestConnector
     #region Socket
 
 
-    event Action<Trade> NewBuyTrade;
-    event Action<Trade> NewSellTrade;
+    event EventHandler<Trade> NewBuyTrade;
+    event EventHandler<Trade> NewSellTrade;
     Task SubscribeTrades(string pair, int maxCount = 100);
     Task UnsubscribeTrades(string pair);
-
-
+    Task ConnectAsync();
+    Task Processing();
 
     event Action<Candle> CandleSeriesProcessing;
     Task SubscribeCandles(string pair,
