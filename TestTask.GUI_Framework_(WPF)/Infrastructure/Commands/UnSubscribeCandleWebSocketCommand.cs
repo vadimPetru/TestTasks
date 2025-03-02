@@ -2,12 +2,12 @@
 
 namespace TestTask.GUI_Framework__WPF_.Infrastructure.Commands;
 
-internal class UnSubscribeTradeWebSocketCommand : CommandBase
+internal class UnSubscribeCandleWebSocketCommand : CommandBase
 {
     private readonly Action<object> _execute;
     private readonly Func<object, bool> _canExecute;
 
-    public UnSubscribeTradeWebSocketCommand(Action<object> execute, Func<object, bool> canExecute)
+    public UnSubscribeCandleWebSocketCommand(Action<object> execute, Func<object, bool> canExecute)
     {
         _execute = execute;
         _canExecute = canExecute;

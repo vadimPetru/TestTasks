@@ -50,30 +50,29 @@
                     />
                 </Grid>
             </TabItem>
-            <TabItem Header="Websockets" Height="20" VerticalAlignment="Bottom">
+            <TabItem Header="Websockets" HorizontalAlignment="Right" Width="75">
                 <Grid Background="#FFE5E5E5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="124*"/>
-                        <ColumnDefinition Width="5*"/>
-                        <ColumnDefinition Width="268*"/>
-                    </Grid.ColumnDefinitions>
-                    <DockPanel  HorizontalAlignment="Left" VerticalAlignment="Top" Height="Auto" Width="auto" Grid.ColumnSpan="3">
-                        <Button DockPanel.Dock="Left"   Content="Подписка на Trade"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" Command="{Binding SubscribeTradeCommand}" />
-                        <Button DockPanel.Dock="Left"   Content="Отписка на Candle"  HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" Command="{Binding }"/>
-                        <Button DockPanel.Dock="Left"   Content="Отписка на Trade"   HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5"/>
-                        <Button DockPanel.Dock="Left"   Content="Подписка на Candle" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5"/>
-                    </DockPanel>
-                    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="500" />
-                            </Grid.ColumnDefinitions>
-                            <DataGrid Grid.Column="0" 
-                              ItemsSource="{Binding Buy}" 
-                              HorizontalAlignment="Stretch" 
-                              VerticalAlignment="Stretch" />
-                        </Grid>
-                    </Grid>
+                  
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+          
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5">
+                        <Button Content="Подписка на Trade" Margin="5" Command="{Binding SubscribeTradeCommand}" />
+                        <Button Content="Отписка на Candle" Margin="5" Command="{Binding UnSubscribeCandleCommand}" />
+                        <Button Content="Отписка на Trade" Margin="5" Command="{Binding UnSubscribeTradeCommand}" />
+                        <Button Content="Подписка на Candle" Margin="5" Command="{Binding SubscribeCandleCommand}" />
+                    </StackPanel>
+
+                 
+                    <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding CurrentCollectionWebSocket}"
+                  AutoGenerateColumns="True"
+                  Margin="10"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch" />
                 </Grid>
             </TabItem>
         </TabControl>

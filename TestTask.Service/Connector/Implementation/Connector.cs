@@ -56,6 +56,7 @@ public class Connector : ITestConnector
         _webSocketClient.OnError += OnErrorHandler!;
         _handler = handler;
         _handler.OnTradeMapping += OnTradeSide!;
+        _handler.OnCandleMapping += OnCandleProcessing!;
     }
 
     private void OnTradeSide(object sender , Trade trade)
@@ -66,6 +67,11 @@ public class Connector : ITestConnector
             return;
         }
         NewSellTrade?.Invoke(this,trade);
+    }
+
+    private void OnCandleProcessing(object sender, Candle candle)
+    {
+        CandleSeriesProcessing?.Invoke(candle);
     }
 
     /// <summary>
@@ -319,6 +325,7 @@ public class Connector : ITestConnector
             await _webSocketClient.SendEventAsync(message);
             _tradeSubscriptions.Remove(key);
         }
+        await _webSocketClient.CloseAsync();
     }
     #endregion
 
@@ -347,6 +354,8 @@ public class Connector : ITestConnector
 
             await _webSocketClient.SendEventAsync(message);
         }
+
+      
     }
 
 
@@ -368,6 +377,7 @@ public class Connector : ITestConnector
             await _webSocketClient.SendEventAsync(message);
             _candleSubscriptions.Remove(keyRemove);
         }
+        await _webSocketClient.CloseAsync();
     }
 #endregion
 

@@ -4,8 +4,8 @@ using System.Windows;
 using System.Windows.Input;
 using TestHQ;
 using TestTask.GUI_Framework__WPF_.Infrastructure.Commands;
-using TestTask.GUI_Framework__WPF_.Model.Enum;
 using TestTask.GUI_Framework__WPF_.ViewModel.Base;
+using TestTask.Service.Connector.Implementation;
 
 namespace TestTask.GUI_Framework__WPF_.ViewModel;
 
@@ -66,6 +66,15 @@ internal class MainWindowViewModel : ViewModelBase
         get => _currentCollection;
         set => Set(ref _currentCollection, value);
     }
+    /// <summary>
+    /// Текущая коллекция Websokcet
+    /// </summary>
+    private object _currentCollectionWebSocket;
+    public object CurrentCollectionWebSocket
+    {
+        get => _currentCollectionWebSocket;
+        set => Set(ref _currentCollectionWebSocket, value);
+    }
     #endregion
 
     #region Коллекции Trade
@@ -98,24 +107,14 @@ internal class MainWindowViewModel : ViewModelBase
     }
     #endregion
 
-    #region Коллекция для WebSocket TradeSell
-    private ObservableCollection<Trade> _sell;
-    public ObservableCollection<Trade> Sell
+    #region Коллекция для WebSocket Candle
+    private ObservableCollection<Candle> _candle;
+    public ObservableCollection<Candle> Candle
     {
-        get => _sell;
-        set => Set(ref _sell, value);
+        get => _candle;
+        set => Set(ref _candle, value);
     }
 
-    #endregion
-
-    #region Видимость окна
-
-    private bool _isModalVisible;
-    public bool IsModalVisible
-    {
-        get => _isModalVisible;
-        set => Set(ref _isModalVisible, value);
-    }
     #endregion
 
     #region Команда для Торгов
@@ -148,10 +147,6 @@ internal class MainWindowViewModel : ViewModelBase
         catch (Exception ex)
         {
             MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-        finally
-        {
-            IsModalVisible = false;
         }
 
     }
@@ -189,14 +184,12 @@ internal class MainWindowViewModel : ViewModelBase
         {
             MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
-        finally
-        {
-            IsModalVisible = false;
-        }
     }
     #endregion
 
     #region Команды WebSocket
+
+    #region Subscribe Trade
     public ICommand SubscribeTradeCommand { get; }
     private bool CanSubscribeTradeCommandExecute(object p) => true;
 
@@ -204,8 +197,9 @@ internal class MainWindowViewModel : ViewModelBase
     {
         try
         {
+            CurrentCollectionWebSocket = null;
             Buy = new();
-          
+            Buy.Clear();
             await _connector.ConnectAsync();
             await _connector.SubscribeTrades("tBTCUSD", 100);
             _connector.NewBuyTrade += (sender, trade) => {
@@ -216,6 +210,7 @@ internal class MainWindowViewModel : ViewModelBase
                 Application.Current.Dispatcher.Invoke(() => Buy.Add(trade));
             };
 
+            CurrentCollectionWebSocket = Buy;
             _connector.Processing();
 
         }
@@ -228,6 +223,83 @@ internal class MainWindowViewModel : ViewModelBase
        
         
     }
+    #endregion
+
+    #region Unsubscribe Trade
+     public ICommand UnSubscribeTradeCommand { get; }
+
+    private bool CanUnSubscribeTradeCommandExecute(object p) => true;
+
+    private async void OnUnSubscribeTradeCommandExecuted(object p)
+    {
+        try
+        {
+            await _connector.UnsubscribeTrades("tBTCUSD");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            await _connector.UnsubscribeTrades("tBTCUSD");
+        }
+    }
+    #endregion
+
+
+    #region Subscribe Candle
+    public ICommand SubscribeCandleCommand { get; }
+    private bool CanSubscribeCandleCommandExecute(object p) => true;
+
+    private async void OnSubscribeCandleCommandExecuted(object p)
+    {
+        try
+        {
+
+            CurrentCollectionWebSocket = null;
+            Candle = new();
+            Candle.Clear();
+
+            await _connector.ConnectAsync();
+            await _connector.SubscribeCandles("tBTCUSD",
+             60,
+             DateTimeOffset.UtcNow.AddDays(-1),
+             count: 30
+                 );
+
+            _connector.CandleSeriesProcessing +=  candle => Candle.Add(candle);
+            CurrentCollectionWebSocket = Candle;
+            _connector.Processing();
+
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            await _connector.UnsubscribeCandles("tBTCUSD");
+        }
+
+
+
+    }
+
+    #endregion
+
+    #region UnSubscribe Candle
+    public ICommand UnSubscribeCandleCommand { get; }
+
+    private bool CanUnSubscribeCandleCommandExecute(object p) => true;
+
+    private async void OnUnSubscribeCandleCommandExecuted(object p)
+    {
+        try
+        {
+            await _connector.UnsubscribeCandles("tBTCUSD");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+    #endregion
+
     #endregion
 
 
@@ -244,8 +316,11 @@ internal class MainWindowViewModel : ViewModelBase
         FetchTradeDataCommand = new TradeRestCommand(OnFetchDataCommandExecuted, CanFetchDataCommandExecute);
         FetchCandleDataCommand = new CandleRestCommand(OnFetchCandleDataCommandExecuted, CanFetchCandleDataCommandExecute);
         SubscribeTradeCommand = new SubscribeTradeWebSocketCommand(OnSubscribeTradeCommandExecuted, CanSubscribeTradeCommandExecute);
+        UnSubscribeTradeCommand = new UnSubscribeTradeWebSocketCommand(OnUnSubscribeTradeCommandExecuted, CanUnSubscribeTradeCommandExecute);
+        SubscribeCandleCommand = new SubscribeCandleWebSocketCommand(OnSubscribeCandleCommandExecuted, CanSubscribeCandleCommandExecute);
+        UnSubscribeCandleCommand = new UnSubscribeCandleWebSocketCommand(OnSubscribeCandleCommandExecuted, CanUnSubscribeCandleCommandExecute);
         #endregion
-
+      
         _connector = connector;
        
       

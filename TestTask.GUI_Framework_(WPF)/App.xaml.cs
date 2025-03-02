@@ -32,7 +32,7 @@ namespace TestTask.GUI_Framework__WPF_
                     services.AddSingleton<IHandler, Handler>();
                     services.AddSingleton<MainWindowViewModel>();
 
-                    services.AddSingleton<ITestConnector,Connector>();
+                    services.AddTransient<ITestConnector,Connector>();
                 })
                 .Build();
         }

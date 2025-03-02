@@ -10,7 +10,7 @@ namespace TestTask.Service.Cients.Implementation
 {
     public class WebSocketClient : IWebSocketClient
     {
-        private readonly ClientWebSocket _webSocket;
+        private ClientWebSocket _webSocket;
         private readonly Uri _serverUri;
         private readonly CancellationTokenSource _ctx;
 
@@ -30,18 +30,31 @@ namespace TestTask.Service.Cients.Implementation
 
         public async Task ConnectAsync()
         {
+           
+            if (_webSocket.State == WebSocketState.Open)
+            {
+                return; 
+            }
+
+            if (_webSocket == null || _webSocket.State == WebSocketState.Closed || _webSocket.State == WebSocketState.Aborted)
+            {
+                _webSocket?.Dispose(); 
+                _webSocket = new ClientWebSocket(); 
+            }
             try
-            {
-                await _webSocket.ConnectAsync(_serverUri, _ctx.Token);
-            }
-            catch (WebSocketException ex)
-            {
-                OnError?.Invoke(this, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                OnError?.Invoke(this, ex.Message);
-            }
+                {
+                    // Создаем новое соединение
+                    await _webSocket.ConnectAsync(_serverUri, _ctx.Token);
+                }
+                catch (WebSocketException ex)
+                {
+                    OnError?.Invoke(this, ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    OnError?.Invoke(this, ex.Message);
+                }
+            
         }
         public async Task SendEventAsync(object message)
         {
@@ -108,7 +121,8 @@ namespace TestTask.Service.Cients.Implementation
             {
                 try
                 {
-                    await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", _ctx.Token);
+               
+                    await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "close", _ctx.Token);
                 }
                 catch (WebSocketException ex)
                 {
