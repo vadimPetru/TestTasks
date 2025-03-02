@@ -97,6 +97,7 @@ internal class MainWindowViewModel : ViewModelBase
         set => Set(ref _buy, value);
     }
     #endregion
+
     #region Коллекция для WebSocket TradeSell
     private ObservableCollection<Trade> _sell;
     public ObservableCollection<Trade> Sell
@@ -195,7 +196,6 @@ internal class MainWindowViewModel : ViewModelBase
     }
     #endregion
 
-
     #region Команды WebSocket
     public ICommand SubscribeTradeCommand { get; }
     private bool CanSubscribeTradeCommandExecute(object p) => true;
@@ -232,7 +232,6 @@ internal class MainWindowViewModel : ViewModelBase
 
 
     private readonly ITestConnector _connector;
-    
 
     public MainWindowViewModel()
     {
