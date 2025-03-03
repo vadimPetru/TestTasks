@@ -305,7 +305,7 @@ internal class MainWindowViewModel : ViewModelBase
 
     #endregion
 
-
+    #region Рассчет кошелька
     private ObservableCollection<Balance> _balance;
 
     public ObservableCollection<Balance> Balance {
@@ -348,6 +348,8 @@ internal class MainWindowViewModel : ViewModelBase
         Balance = balances;
 
     }
+    #endregion
+
     private readonly ITestConnector _connector;
 
     public MainWindowViewModel()
@@ -363,13 +365,10 @@ internal class MainWindowViewModel : ViewModelBase
         SubscribeTradeCommand = new SubscribeTradeWebSocketCommand(OnSubscribeTradeCommandExecuted, CanSubscribeTradeCommandExecute);
         UnSubscribeTradeCommand = new UnSubscribeTradeWebSocketCommand(OnUnSubscribeTradeCommandExecuted, CanUnSubscribeTradeCommandExecute);
         SubscribeCandleCommand = new SubscribeCandleWebSocketCommand(OnSubscribeCandleCommandExecuted, CanSubscribeCandleCommandExecute);
-        UnSubscribeCandleCommand = new UnSubscribeCandleWebSocketCommand(OnSubscribeCandleCommandExecuted, CanUnSubscribeCandleCommandExecute);
+        UnSubscribeCandleCommand = new UnSubscribeCandleWebSocketCommand(OnUnSubscribeCandleCommandExecuted, CanUnSubscribeCandleCommandExecute);
         CalculateWallet = new CalculateWalletCommand(OnCalculatedWalletExecuted, CanCalculatedWalletExecute);
         #endregion
 
         _connector = connector;
-
-
-
     }
 }
