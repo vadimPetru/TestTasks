@@ -76,32 +76,20 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Calculate Balance ">
-                <StackPanel>
-                    <Label Content="BTC:" />
-                    <TextBox Text="{Binding BTC, UpdateSourceTrigger=PropertyChanged}" />
-
-                    <Label Content="XRP:" />
-                    <TextBox Text="{Binding XRP, UpdateSourceTrigger=PropertyChanged}" />
-
-                    <Label Content="XMR:" />
-                    <TextBox Text="{Binding Xr, UpdateSourceTrigger=PropertyChanged}" />
-
-                    <Label Content="DASH:" />
-                    <TextBox Text="{Binding DASH, UpdateSourceTrigger=PropertyChanged}" />
-
-                    <Label Content="Выберите валюту:" />
-                    <ComboBox x:Name="CurrencySelector" SelectedItem="{Binding SelectedCurrency}">
-                        <ComboBoxItem Content="BTC" />
-                        <ComboBoxItem Content="XRP" />
-                        <ComboBoxItem Content="XMR" />
-                        <ComboBoxItem Content="DASH" />
-                        <ComboBoxItem Content="USDT" />
-                    </ComboBox>
-
-                    <Label Content="Результат:" />
-                    <TextBox Text="{Binding SUMM, UpdateSourceTrigger=PropertyChanged}" />
+                <StackPanel Orientation="Vertical">
+                    <Button Command="{Binding CalculateWallet}" Content="Рассчитать" Width="100"></Button>
+                        <DataGrid Margin="10" ItemsSource="{Binding Balance}" AutoGenerateColumns="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Название" Binding="{Binding Name}" />
+                            <DataGridTextColumn Header="Количество" Binding="{Binding Amount}" />
+                            <DataGridTextColumn Header="Курс к USDT" Binding="{Binding ExchangeRates[0]}" />
+                            <DataGridTextColumn Header="Курс к BTC" Binding="{Binding ExchangeRates[1]}" />
+                            <DataGridTextColumn Header="Курс к XRP" Binding="{Binding ExchangeRates[2]}" />
+                            <DataGridTextColumn Header="Курс к XMR" Binding="{Binding ExchangeRates[3]}" />
+                            <DataGridTextColumn Header="Курс к DASH" Binding="{Binding ExchangeRates[4]}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </StackPanel>
-
             </TabItem>
         </TabControl>
     </Grid>

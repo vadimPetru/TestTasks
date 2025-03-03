@@ -305,113 +305,49 @@ internal class MainWindowViewModel : ViewModelBase
 
     #endregion
 
-    #region Валюты 
 
-    private decimal _btc;
-    public decimal BTC { get => _btc; set => Set(ref _btc, value); }
+    private ObservableCollection<Balance> _balance;
 
-    private decimal _xrp;
-    public decimal XRP { get => _xrp; set => Set(ref _xrp, value); }
-
-    private decimal _xmr;
-    public decimal XMR { get => _xmr; set => Set(ref _xmr, value); }
-
-    private decimal _dash;
-    public decimal Dash { get => _dash; set => Set(ref _dash, value); }
-
-    private string _selectedCurrency;
-    public string SelectedCurrency { get => _selectedCurrency; set => Set(ref _selectedCurrency, value); }
-
-
-
-    public ICommand CalculatedCWallet { get; }
-    public bool OnCalculatedCWalletExecute(object p) => true;
-    public void CanCalculatedCWalletExecuted(object p)
+    public ObservableCollection<Balance> Balance {
+        get => _balance;
+        set => Set(ref _balance, value);
+    }
+    public ICommand CalculateWallet { get; }
+    public bool CanCalculatedWalletExecute(object p) => true;
+    public void OnCalculatedWalletExecuted(object p)
     {
-        if (BTC < 0 || XRP < 0 || XMR < 0 || Dash < 0)
+        if (Balance is null)
+            Balance = new();
+        Balance.Clear();
+        var Rates = new Dictionary<string, decimal>()
         {
-            return;
-        }
+          {"BTC"  , 93100m   },
+          {"XRP"  , 33289.5m },
+          {"XMR"  , 405.51m  },
+          {"DASH" , 3486.01m }
+         };
 
-        var dictionary = new Dictionary<decimal, List<Currency>>() {
+        var balances = new ObservableCollection<Balance> {
 
-            { BTC , new List<Currency>(){
-
-             new Currency("USDT", 93408.13m),
-             new Currency("XRP", 32776.57m),
-             new Currency("DASH", 3411.86m),
-             new Currency("XMR", 411.9m)
-            }
-            },
-
-
-            { XRP , new List<Currency>()
-            {
-                new Currency("USDT", 2.86m),
-                new Currency("BTC", 0.00003m),
-                new Currency("DASH", 0.1m),
-                new Currency("XMR",0.012575m)
-            }},
-           
-
-            { XMR ,new List<Currency>()
-            {
-                 new Currency("USDT", 227.44m),
-                 new Currency("XRP", 79.52m),
-                 new Currency("DASH", 8.29m),
-                 new Currency("BTC", 0.002424m)
-            }},
-            
-
-            { Dash ,new List<Currency>()
-            {
-                new Currency("USDT", 27.46m),
-                new Currency("XRP", 9.57m),
-                new Currency("DASH", 0.000293m),
-                new Currency("XMR", 0.12m)
-            }},
+            new Balance("BTC",1,new List<decimal>()),
+            new Balance("XRP",1500,new List<decimal>()),
+            new Balance("XMR" , 50 , new List<decimal>()),
+            new Balance("DASH", 30 , new List<decimal>())
         };
 
-        var taskBTC = Task.Run(() =>
+        foreach(var balance in balances)
         {
-            foreach (var item in dictionary[BTC])
-            {
-                decimal result = +BTC * item.Rates;
-            }
-        });
+            balance.ExchangeRates.Add(balance.Amount * Rates[balance.Name]);
+            balance.ExchangeRates.Add(balance.ExchangeRates[0] / Rates["BTC"]);
+            balance.ExchangeRates.Add(balance.ExchangeRates[0] / Rates["XRP"]);
+            balance.ExchangeRates.Add(balance.ExchangeRates[0] / Rates["XMR"]);
+            balance.ExchangeRates.Add(balance.ExchangeRates[0] / Rates["DASH"]);
+        }
 
-        var taskXRP = Task.Run(() =>
-        {
-            foreach (var item in dictionary[BTC])
-            {
-                decimal result = +XRP * item.Rates;
-            }
-        });
-        var taskXRM = Task.Run(() =>
-        {
-            foreach (var item in dictionary[BTC])
-            {
-                decimal result = +Dash * item.Rates;
-            }
-        });
-        var taskDASH = Task.Run(() =>
-        {
-            foreach (var item in dictionary[BTC])
-            {
-                decimal result = +XMR * item.Rates;
-            }
-        });
-        var taskUSDT = Task.Run(() =>
-        {
-            foreach (var item in dictionary[BTC])
-            {
-                decimal result = +BTC * item.Rates;
-            }
-        });
+       
+        Balance = balances;
 
     }
-
-    #endregion
     private readonly ITestConnector _connector;
 
     public MainWindowViewModel()
@@ -428,6 +364,7 @@ internal class MainWindowViewModel : ViewModelBase
         UnSubscribeTradeCommand = new UnSubscribeTradeWebSocketCommand(OnUnSubscribeTradeCommandExecuted, CanUnSubscribeTradeCommandExecute);
         SubscribeCandleCommand = new SubscribeCandleWebSocketCommand(OnSubscribeCandleCommandExecuted, CanSubscribeCandleCommandExecute);
         UnSubscribeCandleCommand = new UnSubscribeCandleWebSocketCommand(OnSubscribeCandleCommandExecuted, CanUnSubscribeCandleCommandExecute);
+        CalculateWallet = new CalculateWalletCommand(OnCalculatedWalletExecuted, CanCalculatedWalletExecute);
         #endregion
 
         _connector = connector;
